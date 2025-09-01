@@ -1,0 +1,61 @@
+# Structure of neural networks
+
+A *neural network* is a collection of layers of *neurons*. Each neuron in a given layer is connected to every neuron in the previous layer, and a numeric *weight* between $0$ and $1$ is ascribed to each of these connections. Each neuron also has an *activation value*, which is a number between $0$ and $1$. The activation values of first-layer neurons are used to store the inputs, and the activation values of last-layer neurons are used to represent the output. Specifically, each last-layer neuron is associated with a pattern that could be detected in the input; if a particular last-layer neuron has high activation while all other last-layer neurons have low activation, then the network "thinks'' that the pattern associated with the high activation neuron has been detected.
+
+The layered structure is used to take advantage of the the fact that patterns are made up of subpatterns. Specifically, the last layer detects which pattern is present by relying on each neuron in the prior to last layer to have high activation only when its associated subpattern is present. Then, the activation value of a last-layer neuron with associated pattern $p$ is computed as a weighted sum of prior to last-layer activation values. (Let us now say "pattern neuron" to mean "last-layer neuron" and "subpattern neuron" to mean "prior-to-last-layer neuron".) If the weights are configured appropriately (weights coming from subpattern neurons whose subpatterns appear in $p$ are close to $1$, and weights coming from subpattern neurons whose subpatterns don't appear in $p$ are close to $0$), then this weighted sum is approximately the sum of activations of the subpatterns that make up $p$. To restate: given a pattern that's a "sum" of subpatterns, then, if weights are appropriately chosen, the activation value associated with that pattern is approximately equal to the sum of the corresponding subpattern activation values[^1]. Now, the previous layer, which detects subpatterns, depends on *its* previous layer to detect subsubpatterns in the same way. And so on. So we see it's reasonable to have many layers in a neural network.
+
+A small sidenote. The above makes it sound as if the activation values of neurons are simply weighted sums. Since weighted sums can output any sort of value between $-\infty$ and $\infty$, and as activation values must be between $0$ and $1$, then using weighted sums without any modifications will not work. To solve this, we give every layer a number called the *bias*, which is used to adjust the mean of activations a neuron is typical to have, if necessary, and a nonlinear function called an *activation function*, which is used to normalize things down into the range $[0, 1]$. A very common activation function is the *sigmoid function* $\sigma:(-\infty, \infty) \rightarrow (0, 1)$ defined by $\sigma(x) = 1/(1 + e^{-x})$.
+
+[^1]: One very pleasing mathematical way of saying this, though not quite technically true, is: "There is a linear isomorphism between patterns and pattern activation values."
+
+## Everything in a formula
+
+Here is a quick summary of *all* of the above in a couple lines of more formal syntax.
+
+Define $a^{(i)}\_j$ to be the activation value of the $`j`$th neuron in the $`i`$th layer. Define $\mathbf{w}^{(i)}\_{j}$ to be the vector of weights of the $`j`$th neuron in the $`i`$th layer. Notate the $`k`$th entry of $\mathbf{w}^{(i)}\_{j}$, which is the weight from the $`k`$th neuron in layer $i - 1$ to the $`j`$th neuron in layer $i$, as $w^{(i)}\_{kj}$. Define $n_i$ to be the number of neurons in the $`i`$th layer. Finally, let $b_i$ be the bias of the $`i`$th layer, and define $\sigma:(-\infty, \infty) \rightarrow (0, 1)$ by $\sigma(x) = 1/(1 + e^{-x})$.
+
+Then each activation value is given by
+
+$$
+  a^{(i)}\_j = \sigma \Big(\sum\_{k = 1}^{n\_{i - 1}} w^{(i)}\_{kj} a^{(i - 1)}\_k + b_i \Big)
+$$
+
+We could stop here. There are a couple of other ways to express the above, though, if you're interested. If we define $\mathbf{a}^{(i)}$ to be the vector of activation values in the $`i`$th layer, $\mathbf{a}^{(i)} := (a^{(i)}\_1, ..., a^{(i)}\_{n_i})^\top$, then we can use the dot product $\cdot$ to make things a lot more compact:
+
+$$
+  a^{(i)}\_j = \sigma \Big( \mathbf{w}^{(i)}_j \cdot \mathbf{a}^{(i - 1)} + b_i \Big)
+$$
+
+# Training neural networks
+
+Different configurations of a neural network's weights will result in different behaviors of the network. We measure how much error there is in the network as a function of the network's parameters- the weights and biases- with a *cost function*, which is sometimes also called a *loss function*. In truth, cost functions are not only a function of the weights and biases, but also the *training data* (consisting of sample inputs and expected outputs) they use to compute error. There are many ways to measure error and therefore many potential cost functions. One common cost function, called the *mean squared error*, or *MSE*, uses the standard Euclidean norm $||\cdot||$, so that the cost $c_k$ attributable to the $`k`$th training example is given by $c_k(\boldsymbol{\theta}) := ||\mathbf{y}\_k - \mathbf{a}^{(L)}(\boldsymbol{\theta})||$, where  $\boldsymbol{\theta}$ is a vector of weights and biases, $\mathbf{a}^{(L)}(\boldsymbol{\theta})$ is the vector of pattern neuron (i.e. layer $L$ neuron) activations as a function of $\boldsymbol{\theta}$, and $\mathbf{y}\_k$ is the expected output corresponding to the input $\boldsymbol{\theta}$. The *average cost* is then $c(\boldsymbol{\theta}) := \frac{1}{n} \sum_{k = 1}^n c\_k(\boldsymbol{\theta})$.
+
+Understanding how a network is trained requires some visualization. First, think of the network's weights and biases $\boldsymbol{\theta}$ as all being stored in a many-dimensional vector, which lives in the "space'' of all possible such vectors. If, for example, $\boldsymbol{\theta}$ only had one weight and one bias in it, and were thus two dimensional, then the space of all possible $\boldsymbol{\theta}$ would be a plane. Second, imagine the value of the cost function $c$ as corresponding to height above the plane. This way, as we vary $\boldsymbol{\theta}$ around the plane, the cost $c(\boldsymbol{\theta})$ goes up and down in height, and we get a *cost surface*. In practical conditions, when we have many weights and biases and are thus in greater than three dimensions, analogies to this three-dimensional example can still be helpful.
+
+So how do we actually minimize the cost $c$? We use the *gradient descent algorithm*, which relies on the mathematical fact that if $f$ is a function (like our cost function) that sends several numbers to a single number, then the negative gradient $-\nabla f$ gives the direction of greatest decrease in $f$. The idea of the gradient descent algorithm is to start at the point on the cost surface corresponding to an initial configuration of the network, slightly change the weights and biases so as to take a small step of fixed size in the direction which decreases the cost the most (i.e. the direction of $-\nabla c$), and repeat until the fixed-size steps don't go very far from the starting point, which indicates convergence to a local minimum has been achieved.
+
+Computing the gradient $\nabla c$ is a bit involved! To compute $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$ at a particular configuration $\boldsymbol{\theta}$ of weights and biases, the gradient descent algorithm computes the gradient for each training example's cost, $(\nabla c\_k)\_{\boldsymbol{\theta}}$, for each $k$. The recursive *backpropagation algorithm* is used to compute the gradient of a particular training example's cost. Backpropagation is named what it is because it entails computing the components of the gradient involving the $`i`$th layer of the network by recursively already knowing the components of the gradient for the $(i + 1)$st layer of the network; the algorithm starts at the last layer and *propagates* the known components *back* until all are known. Finally, after $(\nabla c\_k)\_{\boldsymbol{\theta}}$ is known for all $k$, it is easy to compute the overall cost, since, as defined before, we have $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum\_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$: we just take the average of the gradients for each training example that were just computed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
