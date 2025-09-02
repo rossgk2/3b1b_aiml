@@ -17,10 +17,10 @@ Define $a^{(i)}\_j$ to be the activation value of the $`j`$th neuron in the $`i`
 Then each activation value is given by
 
 $$
-  a^{(i)}\_j = \sigma \Big(\sum\_{k = 1}^{n\_{i - 1}} w^{(i)}\_{kj} a^{(i - 1)}\_k + b_i \Big)
+  a^{(i)}\_j = \sigma \Big(w^{(i)}\_{1j} a^{(i-1)}\_1 + w^{(i)}\_{2j} a^{(i-1)}\_2 + ... + w^{(i)}\_{n\_{i-1}j} a^{(i-1)}\_{n\_{i-1}} + b_i \Big) = \sigma \Big(\sum\_{k = 1}^{n\_{i - 1}} w^{(i)}\_{kj} a^{(i - 1)}\_k + b_i \Big)
 $$
 
-We could stop here. There are a couple of other ways to express the above, though, if you're interested. If we define $\mathbf{a}^{(i)}$ to be the vector of activation values in the $`i`$th layer, $\mathbf{a}^{(i)} := (a^{(i)}\_1, ..., a^{(i)}\_{n_i})^\top$, then we can use the dot product $\cdot$ to make things a lot more compact:
+We could stop here. There are a couple of other ways to express the above, though, if you're interested. If we define $\mathbf{a}^{(i)}$ to be the vector of activation values in the $`i`$th layer, $\mathbf{a}^{(i)} := (a^{(i)}\_1, ..., a^{(i)}\_{n_i})^\top$, then we can use the *dot product* to make things a lot more compact. The dot product between two vectors $\mathbf{v} := (v_1, ..., v_N)^\top$ and $\mathbf{w} := (w_1, ..., w_N)^\top$ is defined to be $\mathbf{v} \cdot \mathbf{w} := v_1 w_1 + ... + v_N w_N = \sum_{i = 1}^N v_i w_i$. With this definition, we have
 
 $$
   a^{(i)}\_j = \sigma \Big( \mathbf{w}^{(i)}_j \cdot \mathbf{a}^{(i - 1)} + b_i \Big)
@@ -37,6 +37,7 @@ Understanding how to minimize the cost function requires some visualization. Fir
 So how do we actually minimize the cost $c$? We use the *gradient descent algorithm*, which relies on the mathematical fact that if $f$ is a function (like our cost function) that sends vectors to numbers, then the negative gradient $-\nabla f$ gives the direction of greatest decrease in $f$. The idea of the gradient descent algorithm is to start at the point on the cost surface corresponding to an initial configuration of the network, slightly change the weights and biases so as to take a small step of fixed size in the direction which decreases the cost the most (i.e. the direction of $-\nabla c$), and repeat until the fixed-size steps don't go very far from the point representing the current network configuration, which indicates sufficient convergence to a local minimum has been achieved.
 
 Computing the gradient $\nabla c$ is a bit involved! To compute $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$ at a particular configuration $\boldsymbol{\theta}$ of weights and biases, the gradient descent algorithm computes the gradient for each training example's cost, $(\nabla c\_k)\_{\boldsymbol{\theta}}$, for each $k$. The recursive *backpropagation algorithm* is used to compute the gradient of a particular training example's cost. Backpropagation is named what it is because it entails computing the components of the gradient involving the $`i`$th layer of the network by recursively already knowing the components of the gradient for the $(i + 1)$st layer of the network; the algorithm starts at the last layer and *propagates* the known components *back* until all are known. Finally, after $(\nabla c\_k)\_{\boldsymbol{\theta}}$ is known for all $k$, it is easy to compute the overall cost, since, as defined before, we have $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum\_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$: we just take the average of the gradients for each training example that were just computed.
+
 
 
 
