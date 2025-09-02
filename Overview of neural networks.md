@@ -12,7 +12,7 @@ A small sidenote. The above makes it sound as if the activation values of neuron
 
 Here is a quick summary of *all* of the above in a couple lines of more formal syntax for those who are familiar with such syntax. Feel free to skip this section.
 
-Define $a^{(i)}\_j$ to be the activation value of the $`j`$th neuron in the $`i`$th layer. Define $\mathbf{w}^{(i)}\_{j}$ to be the vector (i.e. the list) of weights of the $`j`$th neuron in the $`i`$th layer. Notate the $`k`$th entry of $\mathbf{w}^{(i)}\_{j}$, which is the weight from the $`k`$th neuron in layer $i - 1$ to the $`j`$th neuron in layer $i$, as $w^{(i)}\_{kj}$. Define $n_i$ to be the number of neurons in the $`i`$th layer. Finally, let $b_i$ be the bias of the $`i`$th layer, and define $\sigma:(-\infty, \infty) \rightarrow (0, 1)$ by $\sigma(x) = 1/(1 + e^{-x})$.
+Define $a^{(i)}\_j$ to be the activation value of the $`j`$th neuron in the $`i`$th layer. Define $\mathbf{w}^{(i)}\_{j}$ to be the vector (i.e. the list) of weights of the $`j`$th neuron in the $`i`$th layer. Notate the $`k`$th entry of $\mathbf{w}^{(i)}\_{j}$, which is the weight from the $`k`$th neuron in layer $i - 1$ to the $`j`$th neuron in layer $i$, as $w^{(i)}\_{kj}$. Define $n_i$ to be the number of neurons in the $`i`$th layer. Finally, define $\sigma:(-\infty, \infty) \rightarrow (0, 1)$ by $\sigma(x) = 1/(1 + e^{-x})$, and let $b_i$ be the bias of the $`i`$th layer.
 
 Then each activation value is given by
 
@@ -39,6 +39,7 @@ So how do we actually minimize the cost $c$? We use the *gradient descent algori
 [^2]: Finding a *global* minimum of the cost function is much more difficult.
 
 Computing the gradient $\nabla c$ is a bit involved! To compute $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$ at a particular configuration $\boldsymbol{\theta}$ of weights and biases, the gradient descent algorithm computes the gradient for each training example's cost, $(\nabla c\_k)\_{\boldsymbol{\theta}}$, for each $k$. The recursive *backpropagation algorithm* is used to compute the gradient of a particular training example's cost. Backpropagation is named what it is because it entails computing the components of the gradient involving the $`i`$th layer of the network by recursively already knowing the components of the gradient for the $(i + 1)$st layer of the network; the algorithm starts at the last layer and *propagates* the known components *back* until all are known. Finally, after $(\nabla c\_k)\_{\boldsymbol{\theta}}$ is known for all $k$, it is easy to compute the overall cost, since, as defined before, we have $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum\_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$: we just take the average of the gradients for each training example that were just computed.
+
 
 
 
