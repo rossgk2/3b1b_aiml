@@ -1,6 +1,8 @@
+# Overview: neural networks achieve pattern recognition
+
 A *neural network* is a function that takes in input (such as a greyscale image) and produces output that indicates what pattern (for example, what numeric digit between 0 and 9) it percieves to exist in the input.
 
-In the below **Structure of neural networks**, we discuss exactly how the components- *neurons*- of neural networks interact with each other to ultimately produce some sort of output. In **Training neural networks**, we describe how to gradually improve the configuration of the connections between the neurons, therby *training* the network, to ensure the output actually achieves pattern recognition.
+In the below **Structure of neural networks**, we discuss exactly how the components- *neurons*- of neural networks interact with each other. In **Training neural networks**, we describe how to *train* the network, and gradually improve the configuration of the connections between the neurons, to ensure the output actually achieves pattern recognition.
 
 # Structure of neural networks
 
@@ -45,5 +47,6 @@ So how do we actually minimize the cost $c$? We use the *gradient descent algori
 [^3]: Finding a *global* minimum of the cost function is much more difficult.
 
 Computing the gradient $\nabla c$ is a bit involved! In order to compute $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$ at a particular configuration $\boldsymbol{\theta}$ of weights and biases, the gradient descent algorithm must compute the gradient of each training example's cost, $(\nabla c\_k)\_{\boldsymbol{\theta}}$, for each $k$. The recursive *backpropagation algorithm* is used to compute the gradient of a *particular* training example's cost. Backpropagation is named what it is because it entails computing the components of the gradient involving the $`i`$th layer of the network by recursively already knowing the components of the gradient for the $`(i + 1)`$st layer of the network; the algorithm starts at the last layer and *propagates* the known components *back* until all are known. Finally, after $(\nabla c\_k)\_{\boldsymbol{\theta}}$ is known for all $k$, it is easy to compute the gradient of the average cost $(\nabla c)\_{\boldsymbol{\theta}}$, since, as defined before, we have $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum\_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$: we just take the average of the gradients for each training example that were just computed.
+
 
 
