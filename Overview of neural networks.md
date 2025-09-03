@@ -18,7 +18,7 @@ A small sidenote. Currently, we have concluded that the activation values of neu
 
 [^3]: By "smooth" I mean "differentible".
 
-## Everything in a formula
+## Everything in formulas
 
 Here is a quick summary of *all* of the above in a couple lines of more formal syntax for those who are familiar with such syntax. Feel free to skip this section.
 
@@ -36,6 +36,55 @@ $$
   a^{(i)}\_j = \sigma \Big( \mathbf{w}^{(i)}_j \cdot \mathbf{a}^{(i - 1)} + b_i \Big)
 $$
 
+Even this can be rewritten alternatively. If we define $\boldsymbol{\sigma}$ to be the function acting on vectors that sends $(v\_1, ..., v\_N)^\top$ to $(\sigma(v\_1, ..., \sigma(v\_N))^\top$, then from the above it follows that
+
+$$
+    \mathbf{a}^{(i)}
+    =
+    \begin{pmatrix}
+      a^{(i)}\_1 \\
+      \vdots \\
+      a^{(i)}\_{n_i}
+    \end{pmatrix}
+    =
+    \boldsymbol{\sigma}
+    \left(
+    \begin{pmatrix}
+        \mathbf{w}^{(i)}\_1 \cdot \mathbf{a}^{(i - 1)} \\
+        \vdots \\
+        \mathbf{w}^{(i)}_{n_i} \cdot \mathbf{a}^{(i - 1)}
+    \end{pmatrix}
+    +
+    \underbrace
+    {
+      \begin{pmatrix}
+        b\_1 \\
+        \vdots \\
+        b\_{n\_i}
+      \end{pmatrix}
+    }\_{\mathbf{b}}
+    \right)
+    =
+    \boldsymbol{\sigma}
+    \left(
+    \underbrace
+    {
+      \begin{pmatrix}
+        (\mathbf{w}^{(i)}\_1)^\top \\
+        \vdots \\
+        (\mathbf{w}^{(i)}\_{n_i})^\top
+      \end{pmatrix}
+    }\_{(\mathbf{W}^{(i)})^\top}
+    \mathbf{a}^{(i - 1)}
+    +
+    \mathbf{b}
+    \right)
+    =
+    \boldsymbol{\sigma}\Big((\mathbf{W}^{(i)})^\top \mathbf{a}^{(i - 1)} + \mathbf{b}^{(i)}\Big)
+$$
+
+In the above we have used the fact that one way of expressing a matrix-vector product is to form the vector whose $`i`$th entry is the dot product of the $`i`$th row of the matrix with the $`i`$th entry of the vector.
+
 # Training neural networks
 
 Different configurations of a neural network's weights will result in different behaviors of the network. We measure how much error there is in the network as a function of the network's parameters- the network's weights and biases- with a *cost function*, which is sometimes also called a *loss function*. In truth, cost functions are not only a function of the weights and biases, but also the *training data* (consisting of sample inputs and expected outputs) they use to compute error.
@@ -49,6 +98,7 @@ So how do we actually minimize the cost $c$? We use the *gradient descent algori
 [^4]: Finding a *global* minimum of the cost function is much more difficult.
 
 Computing the gradient $\nabla c$ is a bit involved! In order to compute $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$ at a particular configuration $\boldsymbol{\theta}$ of weights and biases, the gradient descent algorithm must compute the gradient of each training example's cost, $(\nabla c\_k)\_{\boldsymbol{\theta}}$, for each $k$. The recursive *backpropagation algorithm* is used to compute the gradient of a *particular* training example's cost. Backpropagation is named what it is because it entails computing the components of the gradient involving the $`i`$th layer of the network by recursively already knowing the components of the gradient for the $`(i + 1)`$st layer of the network; the algorithm starts at the last layer and *propagates* the known components *back* until all are known. Finally, after $(\nabla c\_k)\_{\boldsymbol{\theta}}$ is known for all $k$, it is easy to compute the gradient of the average cost $(\nabla c)\_{\boldsymbol{\theta}}$, since, as defined before, we have $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum\_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$: we just take the average of the gradients for each training example that were just computed.
+
 
 
 
