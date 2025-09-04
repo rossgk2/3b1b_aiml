@@ -36,7 +36,7 @@ $$
   a^{(i)}\_j = \sigma \Big( \mathbf{w}^{(i)}_j \cdot \mathbf{a}^{(i - 1)} + b_i \Big)
 $$
 
-Even this can be rewritten alternatively. If we define $\boldsymbol{\sigma}$ to be the function acting on vectors that sends $(v\_1, ..., v\_N)^\top$ to $(\sigma(v\_1, ..., \sigma(v\_N))^\top$, then from the above it follows that
+Even this can be rewritten alternatively. If we define $\boldsymbol{\sigma}$ to be the function acting on vectors that sends $(v\_1, ..., v\_N)$ to $(\sigma(v\_1), ..., \sigma(v\_N))$, then from the above it follows that
 
 $$
     \mathbf{a}^{(i)}
@@ -98,6 +98,7 @@ So how do we actually minimize the cost $c$? We use the *gradient descent algori
 [^4]: Finding a *global* minimum of the cost function is much more difficult.
 
 Computing the gradient $\nabla c$ is a bit involved! In order to compute $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$ at a particular configuration $\boldsymbol{\theta}$ of weights and biases, the gradient descent algorithm must compute the gradient of each training example's cost, $(\nabla c\_k)\_{\boldsymbol{\theta}}$, for each $k$. The recursive *backpropagation algorithm* is used to compute the gradient of a *particular* training example's cost. Backpropagation is named what it is because it entails computing the components of the gradient involving the $`i`$th layer of the network by recursively already knowing the components of the gradient for the $`(i + 1)`$st layer of the network; the algorithm starts at the last layer and *propagates* the known components *back* until all are known. Finally, after $(\nabla c\_k)\_{\boldsymbol{\theta}}$ is known for all $k$, it is easy to compute the gradient of the average cost $(\nabla c)\_{\boldsymbol{\theta}}$, since, as defined before, we have $(\nabla c)\_{\boldsymbol{\theta}} = (1/n) \sum\_{k = 1}^n (\nabla c\_k)\_{\boldsymbol{\theta}}$: we just take the average of the gradients for each training example that were just computed.
+
 
 
 
