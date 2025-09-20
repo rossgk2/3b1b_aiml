@@ -1,0 +1,101 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry
+{
+	a4paper,
+	total={170mm,257mm},
+	left=20mm,
+	top=20mm,
+}
+
+\begin{document}
+	
+	\section*{Backpropagation, intuitively}
+	
+	We seek to minimize the average cost function by using the gradient descent algorithm.
+	
+	Of course, in order to perform the gradient descent algorithm, we need to have some way to actually compute the gradient of the average cost function.
+	
+	To approach this, we realize that the average cost function is, well, an \textit{average} of cost functions that represent the cost the neural network incurs on a single training example. If we let $c_1$ be the cost the network incurs on the $1$st training sample, $c_2$ be the cost the network incurs on the $2$nd training sample, and so on, so that $c_n$ is the cost the network incurs on the $n$th training sample, then the average cost $c$ that we seek to minimize is
+	
+	\begin{align*}
+		c = \frac{1}{n}\left(c_1 + ... + c_n\right).
+	\end{align*}
+	
+	This is helpful because, since the gradient $\nabla$ is a linear operator, the gradient of the average is the average of the gradients:
+	
+	\begin{align*}
+		\nabla c = \frac{1}{n}\left(\nabla c_1 + ... + \nabla c_n\right).
+	\end{align*}
+	
+	So, we can compute the gradient $\nabla c$ by first computing the gradients $\nabla c_1, ..., \nabla c_n$, and then averaging them all.
+	
+	\subsection*{Not only per-example but also per-last layer-activation}
+	
+	At this point- after we've reduced the problem of computing $\nabla c$ to the problem of computing $\nabla c_1, ..., \nabla c_n$- the gradient $\nabla c_k$ can be be determined kind of through brute symbol pushing: it's just calculus with some recursion thrown in. Grant's next video (and therefore my next article) focus on exactly how to do that. The current video we're covering, ``Backpropagation, intuitively'', instead focuses on an \textit{equivalent} recursive process for computing $\nabla c_k$ that more explicitly describes what happens to each neuron, and is thus arguably more intuitive.
+	
+	The idea is that computing the gradient $\nabla c_k$ can actually be simplified into yet another subproblem. Hopefully, it is intuitive that if we use $c_{k1}$ to denote the cost for the $k$th training sample in only the first last layer activation, $c_{k2}$ to denote the cost for the $k$th training sample in only the second last layer activation, and so on, so that $c_{kj}$ is the cost for the $k$th training sample in only the $j$th last layer activation\footnote, then the gradient $\nabla c_k$ of the cost associated with all of the last layer activations is the sum of the costs in individual activation:
+	
+	\begin{align*}
+		\nabla c_k = \nabla c_{k1} + ... + \nabla c_{kn_L}.
+	\end{align*}
+	
+	In other words, we can compute the gradient $\nabla c_k$ by first computing the gradients $\nabla c_{k1}, ..., \nabla c_{kn_L}$, and then summing them. The algorithm we use to do this, presented below, is called \textit{backpropagation}. (We will soon see why it is called that.)
+	
+	Notice, since backpropagation is used to compute just one of the gradients $\nabla c_k$, then the backpropagation algorithm must be called \textit{once for every training example} in order to compute the overall gradient $\nabla c$.
+	
+	\subsection*{Backpropagation}
+	
+	We're ready to describe backpropagation, the core algorithm for computing the gradients $\nabla c_{k1}, ..., \nabla c_{kn_L}$. Instead of computing the positive gradients $\nabla c_{k1}, ..., \nabla c_{kn_L}$, though, we'll compute the negative gradients $-\nabla c_{k1}, ..., -\nabla c_{kn_L}$, since this allows for a more intuitive phrasing of our algorithm\footnote{Because finding negative, rather than positive, gradients corresponds to minimizing, rather than maximizing, $c_{k1}, ..., c_{kn_L}$.}. The positive gradients can of course be immediately determined from the negative ones.
+	
+	Now, for the algorithm. Consider $c_{kj}$, which is one of the cost functions $c_{k1}, ..., c_{kn_L}$. It depends on the last layer activations, which depend on last layer weights, last layer bias, and prior to last layer activations. So, we can think of $c_{kj}$ as depending on last layer weights, last layer bias, and prior to last layer activations.
+	
+	If we consider the cost surface for $c_{kj}$ when thought of as having these inputs\footnote{Take note that usually, one thinks of cost functions as only being functions of weights and biases, not as functions of weights, biases, and activations, as we are doing here.}, then the direction on this cost surface- the particular nudge in last layer weights, last layer bias, and prior to last layer activations- that results in the steepest descent gives us the components of the negative gradient\footnote{\textit{This} gradient is with respect to all weights and all biases, \textit{not}: last layer weights, last layer bias, and prior to last layer activations.} $-\nabla c_{kj}$ corresponding to the last layer, as well as nudges\footnotemark that should be made to the activations of the prior to last layer.
+	
+	\footnotetext{To compute the nudges, we need a definition of what constitutes a ``small'' step size.}
+	
+	Since this is done for each cost function $c_{k1}, ..., c_{kn_L}$, i.e., each neuron, then each neuron suggests a nudge for every activation in the prior to last layer. From all of these suggested nudges, the \textit{suggested activation} is the sum of all suggested nudges plus the existing activation value.
+	
+	Of course, there are still a lot of components of all of $-\nabla c_{k1}, ..., -\nabla c_{kn_L}$ that we don't know! To determine the components corresponding to layer $L - 1$, we repeat the process already laid out, pretending as if the prior to last layer is the last layer, and as if the suggested activations are the expected activations.
+	
+	We continually use later components of the negative gradients to determine earlier ones in this way, thus ``propagating back'' the knowledge of components until all are known. This is where the name \textit{backpropagation} comes from.
+	
+	\subsection*{Actually computing the direction of fastest possible descent}
+	
+	The above description of backpropagation algorithm assumes we know how to compute the direction of fastest possible descent in the cost surface of $c_{kj}$, when we consider $c_{kj}$ to be a function of not only the last layer weights and last layer bias, but also the prior to last layer activations. How do we actually do this?
+	
+	Well, we just need to think about how we can modify a last layer activation $a$ so that it becomes closer to the expected output $y$. Recall
+	
+	\begin{align*}
+		a = \sigma(w_1 a_1 + ... + w_m a_m + b),
+	\end{align*}
+	
+	where $w_1, ..., w_m$ are the weights of the neuron producing $a$, where $a_1, ..., a_m$ are the activation values of the prior to last layer, and $b$ is the bias of the prior to last layer. We see that we can move $a$ closer to $y$ by:
+	
+	\begin{itemize}
+		\item Changing the weights $w_1, ..., w_m$ of the neuron producing $a$.
+		\item Changing the bias $b$ of the neuron producing $a$.
+		\item Changing the activations $a_1, ..., a_m$ of the prior to last layer. (This would be done by later on changing the weights and biases of neurons in the prior to last layer.)
+	\end{itemize}
+	
+	In the video, Grant tells us that if we're after the greatest possible decrease in the error $|y - a|$, then 
+	
+	\begin{itemize}
+		\item Weights should be changed a lot relative to the other weights only if the activations they multiply are influential.
+		
+		\item Prior to last layer activations should be changed a lot relative to the other prior to last layer activations only if the weights they multiply are influential.
+	\end{itemize}
+	
+	The weight-bias vector $(w_1, ..., w_m, b)$ computed in this way is the fastest decrease in the error in $a$, and therefore equal to the negative gradient we were trying to compute.
+	
+	If it feels like the details are still vague, that is how they should be! Grant doesn't go into more detail for this intuitive description. See the next article for how to actually implement backpropagation, and for discussion of how exactly computations following the above rules are done.
+	
+	\subsection*{Stochastic gradient descent}
+	
+	Having gradient descent call the backpropgation algorithm once for every training example is too slow in practice. In the improved \textit{stochastic gradient descent} algorithm, we partition the training data into mini-batches. In stochastic gradient descent, the algorithm proceeds as in regular gradient descent, except the $i$th iteration uses the backpropgation algorithm once for every training example in the $i$th mini-batch instead of once for every training sample in the entire training data set.
+	
+	Stochastic gradient descent still gives convergence to a local minimum. While non-stochastic, ``true'' gradient is like a person very carefully selecting the direction of greatest descent every step they take downhill, stochastic gradient descent is like a person more drunkenly walking down the hill. Both walkers eventually end up in the same place.
+\end{document}

@@ -1,0 +1,139 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry
+{
+	a4paper,
+	total={170mm,257mm},
+	left=20mm,
+	top=20mm,
+}
+
+\begin{document}
+	\section*{But what is a neural network?}
+	
+	In this series we'll look at a simple,``plain vanilla'' neural network, also called a \textit{multilayer perceptron}. Understanding such a network is necessary for understanding more complicated neural networks (like convolutional neural networks for image processing or long short-term memory neural networks for speech recognition).
+	
+	We'll specifically look at how to design a neural network that can determine what digit between $0$ and $9$ has been drawn in a greyscale image.
+	
+	\subsection*{Neurons}
+	
+	Neurons are things that hold numbers, specifically, numbers between $0$ and $1$. The number that a neuron holds is called its \textit{activation value}.
+	
+	The first layer of neurons in our neural network will hold the values of the digit that has been drawn in greyscale. If the image is 28 pixels by 28 pixels, then there will be $28 \cdot 28 = 784$ pixels in the input image, and we will therefore need $784$ neurons in the first layer to store the greyscale values of these pixels.
+	
+	The last layer of neurons in our neural network will represent which digit the neural network ``thinks'' has been drawn in the input image. So, there will be $10$ last layer neurons; one for each digit between $0$ and $9$.
+	
+	\subsection*{Why the layers?}
+	
+	Why the layers? One plausible \textit{motivation} for them is that since the last layer should recognize digits, perhaps the prior to last layer should recognize components of digits (called ``loops'' in the video), and the activations in the prior to last layer should influence the activations in the last layer, so that a neuron in the last layer corresponding to a particular digit only lights up with high activation whenever the neurons in the prior to last layer corresponding to its components also have high activation.
+	
+	In the same way, the activations of neurons associated with components of digits (called ``loops'' in the video) will be influenced by the activations of neurons associated with components of components of digits (called ``edges'' in the video).
+	
+	So we see it's at least reasonable to think that the neural network should consist of layers of neurons, with each layer influencing the next.
+	
+	\subsubsection*{Edge detection example}
+	
+	How should our ``edge neurons'', neurons associated with components of components of digits, detect whether a given edge is in the greyscale image? Recall that our $28$ by $28$ greyscale image is represented by the vector of first-layer neuron activations,
+	
+	\begin{align*}
+		\begin{pmatrix}
+			a_1 \\
+			\vdots \\
+			a_n
+		\end{pmatrix},
+	\end{align*}
+	
+	where $n = 28 \cdot 28 = 784$. Let's represent an ``edge'' (a subset of pixels in the greyscale image) as another vector,
+	
+	\begin{align*}
+		\begin{pmatrix}
+			w_1 \\
+			\vdots \\
+			w_n
+		\end{pmatrix},
+	\end{align*}
+	
+	so that each of this vector's components is $1$ when the corresponding pixel is in the subset (the ``edge'') and $0$ when the corresponding pixel is not in the subset. We can even have components be $-1$ when corresponding pixels are immediately adjacent to pixels in the subset, so as to penalize pixels that blur the line of the edge. Also, notice that while we \textit{represent} edges as column vectors (like the above), we \textit{visualize} them as $28$ by $28$ grids of pixels. In the video, pixels in an edge corresponding to weights of $1$, $0$, and $-1$ are colored green, black, and red, respectively.
+	
+	With this convention, the \textit{weighted sum} of first-layer activation values 
+	
+	\begin{align*}
+		w_1 a_1 + ... + w_n a_n
+	\end{align*}
+	
+	gives some measure of how much of the subset is represented in the image. If the weighted sum is larger, more of the subset is represented in the image; if it's smaller, less is.
+	
+	So, we see it's reasonable for edge neurons to compute their activation values by evaluating weighted sums of first-layer activation values.
+	
+	\subsection*{Weights}
+	
+	In general, every neuron- not only edge neurons- will compute their activation value as a weighted sum of activation values from the previous layer. Each neuron therefore not only has an activation value, but a vector of \textit{weights} associated with it used to compute its activation value.
+	
+	The weights of all neurons constitute the  \textit{parameters} of the network; the dials or knobs that we can tweak to adjust the network's behaivor.
+	
+	\subsection*{Activation functions and biases}
+	
+	\subsubsection*{Activation functions}
+	
+	Weighted sums can produce any number between $-\infty$ and $\infty$. The problem is, we know that activation values must be between $0$ and $1$. In order to remedy this problem, we will use a ``squishification function'' that takes a number between $-\infty$ and $\infty$ and outputs a number between $0$ and $1$. (In the literature, ``squishification functions'' are called \textit{activation functions}.) One commonly used ``squishification function'' is the \textit{sigmoid} function $\sigma$ defined by
+	
+	\begin{align*}
+		\sigma(x) = \frac{1}{1 + e^{-x}}.
+	\end{align*}
+	
+	This formula may look a little complicated. Really, the important things are that $\sigma$ maps $(-\infty, \infty)$ to $(0, 1)$, that $\sigma$ preserves the order of weighted sums (if one weighted sum is smaller than the other, than the evaluation of $\sigma$ on the smaller weighted sum produces a number smaller than the evaluation of $\sigma$ on the larger weighted sum), and that $\sigma$ is smooth (i.e. differentiable).
+	
+	So, if we have a weighted sum $w_1 a_1 + ... + w_n a_n$, then
+	
+	\begin{align*}
+		\sigma(w_1 a_1 + ... + w_n a_n)
+	\end{align*}
+	
+	is assuredly between $0$ and $1$, which is what we want.
+	
+	
+	\subsubsection*{Bias}
+	
+	We're not quite done modifying weighted sums. With use of squishification functions, we can be sure that they get converted to numbers between $0$ and $1$, but what if we want the weighted sum to have to clear some threshold- say, $10$- before it activates meaningfully? If this is the case, then we should add $-10$ to the weighted sum before the squishification function acts on it.
+	
+	For cases like this, we introduce a new parameter to every layer of the network, called the \textit{bias}.
+	
+	Thus, the activation value $a$ of a neuron with weights $w_1, ..., w_n$ and in a layer with bias $b$ is
+	
+	\begin{align*}
+		a = \sigma(w_1 a_1 + ... + w_n a_n + b)
+	\end{align*}
+	
+	where $a_1, ..., a_n$ are the activation values of the previous layer of the network.
+	
+	\subsection*{Counting parameters}
+	
+	Even a small example network like this with four layers (input, edge, loop, output) has a \textit{lot} of parameters- a lot of weights and biases.
+	
+	The first layer has $28 \cdot 28 = 784$ neurons. The video assumed that the edge layer and loop layer each have $16$ neurons. And the last layer has $10$ neurons.
+	
+	Since there is a weight between every neuron in each layer to every neuron in the next layer, then there are
+	
+	\begin{align*}
+		\underbrace{784}_{\text{first}} \cdot \underbrace{16}_{\text{edge}} + \underbrace{16}_{\text{edge}} \cdot \underbrace{16}_{\text{loop}} + \underbrace{16}_{\text{loop}} \cdot \underbrace{10}_{\text{last}} = 12960
+	\end{align*}
+	
+	weights, and
+	
+	\begin{align*}
+		\underbrace{16}_{\text{edge}} + \underbrace{16}_{\text{loop}} + \underbrace{10}_{\text{last}} = 42
+	\end{align*}
+	
+	biases. In total, there are $12960 + 42 = 13002$ parameters.
+	
+	\subsection*{Learning}
+	
+	When we talk about ``learning'', we're referring to tweaking and tuning all of the network parameters until we find an optimal setting that makes the network do what we want it to.
+	
+	\subsection*{Notation and linear algebra}
+	
+	Since there's multiple layers in the network and multiple neurons in each layer, notating activation values and weights in full generality can be a litle complicated. Please see the \textbf{Everything in formulas} section of the [summary article](Overview\%20of\%20neural\%20networks.ipynb) for this!
+\end{document}

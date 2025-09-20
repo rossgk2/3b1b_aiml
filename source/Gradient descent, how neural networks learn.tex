@@ -1,0 +1,64 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry
+{
+	a4paper,
+	total={170mm,257mm},
+	left=20mm,
+	top=20mm,
+}
+
+\begin{document}
+	\section*{Gradient descent, how neural networks learn}
+	
+	Our example neural network is really just a function, with
+	
+	\begin{itemize}
+		\item $28 \cdot 28 = 784$ activation values as \textbf{input}
+		\item $10$ activation values as \textbf{output}
+		\item $13000$ weights and biases as \textbf{parameters}\footnote{To say that a function of a single variable $x$ has a variable $y$ as a ``parameter'' means that $f$ is really a function of two variables, $f(x, y)$, but we prefer to think of $x$ as varying and of $y$ as being held constant, and we might use the notation $f_y(x)$ to convey this.}
+	\end{itemize}
+	
+	The network parameters determine what the network actually does to its input.
+	
+	What we want is an algorithm that takes a bunch of training data (a bunch of example digits, along with labels for what actual digits they represent), and adjusts those 13000 weights and biases so as to improve the network's performance on the training data. Hopefully, what the network learns generalizes to images beyond that training data.
+	
+	With a random initial configuration of weights and biases, our network's output layer looks like a mess. When a ``$3$'' is drawn, instead of getting the desired result, where the ``$3$'' neuron is the only one with high activation, we see that several of the output neurons have high activation.
+	
+	\subsection*{Cost functions}
+	
+	In order improve the network's configuration, we first have to measure how bad it is. We define a \textit{cost function} for this purpose, which is a function of the network's weights and biases that is also parameterized by the training data. Sometimes, \textit{cost functions} are called \textit{loss functions}.
+	
+	The cost \textit{for a single training example} in a neural network of $L$ layers is 
+	
+	\begin{align*}
+		(y_1 - a^{(L)}_1)^2 + ... + (y_{n_L} - a^{(L)}_{n_L})^2 
+	\end{align*}
+	
+	where $y_1, ..., y_{n_L}$ are the expected outputs for that training example, and where $a^{(L)}_1, ..., a^{(L)}_{n_L}$ are the actual outputs, i.e., the last layer activation values.
+	
+	The average cost that we seek to minimize is the average of \textit{all} of the per-training-example costs.
+	
+	\subsection*{Gradient descent}
+	
+	The cost function has
+	
+	\begin{itemize}
+		\item $13000$ weights and biases as \textbf{input}
+		\item $1$ number, the cost, as \textbf{output}
+		\item many training examples as \textbf{parameters}
+	\end{itemize}
+	
+	To minimize the cost as a function of the weights and biases, we'll first need some visualization. First, think of the network's weights and biases as all being stored in a many-dimensional vector, which lives in the "space'' of all possible such vectors. If, for example, we only had one weight and one bias, then the space of all possible weights and biases would be a plane. Second, imagine the value of the cost function $c$ as corresponding to height above the plane. This way, as we vary our weights and biases around the plane, the cost goes up and down in height, and we get a \textit{cost surface}. In practical conditions, when we have many weights and biases and are thus in many more dimensions than three, analogies to this three-dimensional example can still be helpful.
+	
+	You can imagine that a good way of finding a \textit{local minimum} of the cost function- which, visually, is a valley in the cost surface- is to start with some initial configuration of weights and biases- i.e. start at some point on the surface- and repeatedly take small steps in the direction of steepest descent. Once the steps stop producing a lot of movement, then we must have settled in a valley, and found a local minimum\footnote{Global minima are much more difficult to find.}. 
+	
+	This exact algorithm is called the \textit{gradient descent} algorithm, and it is how neural networks are trained. Gradient descent is called what it is because it happens that the direction of steepest descent on the cost surface is equal to the negative gradient $-\nabla c(\text{weights}, \text{biases})$ of the cost function. (See this article [link] for an explanation of why). A reminder: the gradient $\nabla c$ of $c$ is the vector of all partial derivatives of $c$; i.e., the vector containing each partial derivative of $c$ relative to a weight and each partial derivative of $c$ relative to a bias.
+	
+	\subsection*{Analyzing the network}
+	
+	In the video, we see that the motivation for the network structure turned out to not actually describe the configuration of weights arrived at by training on reputable data! After training, when we visualize the weights associated with our ``edge neurons'' as grids of pixels colored green, black, and red (corresponding to whether the weights are $1$, $0$, or $-1$)\footnote{See the article on the previous video for a reminder of how this convention works.}, we see that they look quite random. So, ``edge neurons'' aren't truly ``edge neurons'' after all. We see that while imagining layers of the network as detecting intuitive components and subcomponents of digits might be good \textit{motivation}, it's not true in the end!
+\end{document}
