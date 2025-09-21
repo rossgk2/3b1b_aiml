@@ -1,0 +1,192 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry
+{
+	a4paper,
+	total={170mm,257mm},
+	left=20mm,
+	top=20mm,
+}
+
+\begin{document}
+	\section*{Backpropagation calculus}
+	
+	In this article, we present how backpropagation is actually done in practice. With the goal of determining the gradient $\nabla c_i$, we'll compute the partial derivatives of $c_i$ with respect to an arbitrary weight and an arbitrary bias in an arbitrary layer (layer $\ell$), and find that they recursively depend on the same partial derivatives for layer $\ell + 1$. Then we'll determine concrete non-recursive expressions for these partial derivatives in layer $L$. The \textit{backpropagation equations} we obtain recursively determine the partial derivatives for all layers, and therefore determine the gradient $\nabla c_i$.
+	
+	\subsection*{Notation warning}
+	
+	An important heads up! We will actually use $c_i$ to speak of the cost function for the $i$th training example, rather than $c_k$ to speak of the cost function for the $k$th training example. This is because we want to reserve the letter $k$ so that we can use it to denote the weight $w^{(\ell)}_{kj}$ from the $k$th neuron in layer $\ell - 1$ to the $j$th neuron in layer $\ell$.
+	
+	\subsection*{Notation overview}
+	
+	Overall, our notation will be as follows:
+	
+	\begin{itemize}
+		\item $c_i$ is the cost function for the $i$th training example, defined as
+		
+		\begin{align*}
+			c_i := \sum_{j = 1}^{n_L} (y_{ij} - a^{(L)}_j)^2,
+		\end{align*}
+		
+		where $y_{1j}, ..., y_{n_L j}$ are the expected last-layer activations for the $i$th training example
+		
+		\item $w^{(\ell)}_{kj}$ is the weight from the $k$th neuron in layer $\ell - 1$ to the $j$th neuron in layer $\ell$
+		\item $b^{(\ell)}_j$ is the bias of the $j$th neuron in the $\ell$th layer\footnote{In the first article in this series, we said that each layer, not each neuron, will have its own bias. Making the more general assumption that each neuron has its own bias doesn't make the calculations more difficult, and is more common in the literature, so we do it here.}
+		\item $z^{(\ell)}_j$ is the ``preactivation value'' of the $j$th neuron in layer $\ell$, and is defined to be the weighted sum of the layer $\ell - 1$ activations by the weights of $j$th neuron in layer $\ell$, plus the bias of layer $\ell$:
+		
+		\begin{align*}
+			z^{(\ell)}_j := \sum_{k = 1}^{n_{\ell-1}} w^{(\ell)}_{kj} a^{(\ell - 1)}_k + b^{(\ell)}_j
+		\end{align*}
+		
+		\item $a^{(\ell)}_j$ is the activation value of the $j$th neuron in layer $\ell$, and is defined to be the result of the sigmoid function acting on the preactivation $z^{(\ell)}_j$:
+		
+		\begin{align*}
+			a^{(\ell)}_j := \sigma(z^{(\ell)}_j)
+		\end{align*}
+		
+		\item $L$ is the last layer in the neural network
+	\end{itemize}
+	
+	\subsection*{Partial derivatives in an arbitrary layer}
+	
+	Now, we compute the relevant partial derivatives of $c_i$ for an arbitrary layer $\ell$, $\ell < L$:
+	
+	\begin{align*}
+		\frac{\partial c_i}{\partial w^{(\ell)}_{kj}} &= \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial w^{(\ell)}_{kj}}, \\
+		\frac{\partial c_i}{\partial b^{(\ell)}_j} &= \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial b^{(\ell)}_j}.
+	\end{align*}
+	
+	To determine these partial derivatives, we'll compute the partial derivatives in the above products. First, we have
+	
+	\begin{align*}
+		\frac{\partial c_i}{\partial a^{(\ell)}_j} &= \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell+1)}_r} \frac{\partial a^{(\ell+1)}_r}{\partial z^{(\ell + 1)}_r} \frac{\partial z^{(\ell + 1)}_r}{\partial a^{(\ell)}_j} \\
+		&= \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell+1)}_r} \sigma'(z^{(\ell + 1)}_r) \frac{\partial}{\partial a^{(\ell)}_j}\left(\sum_{s = 1}^{n_\ell} w^{(\ell + 1)}_{sr} a^{(\ell)}_s + b^{(\ell + 1)}_r\right) \\
+		&= \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell+1)}_r} \sigma'(z^{(\ell + 1)}_r) \left(\sum_{s = 1}^{n_\ell} \frac{\partial}{\partial a^{(\ell)}_j}\left(w^{(\ell + 1)}_{sr} a^{(\ell)}_s\right) + \frac{\partial b^{(\ell + 1)}_r}{\partial a^{(\ell)}_j}\right) \\
+		&= \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell+1)}_r} \sigma'(z^{(\ell + 1)}_r) \left(\sum_{s = 1}^{n_\ell} w^{(\ell + 1)}_{sr} \frac{\partial}{\partial a^{(\ell)}_j} \left( a^{(\ell)}_s \right) \right) \\
+		&= \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell+1)}_r} \sigma'(z^{(\ell + 1)}_r) \left(\sum_{s = 1}^{n_\ell} w^{(\ell + 1)}_{sr} \delta_{sj} \right) \\
+		&= \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell+1)}_r} \sigma'(z^{(\ell + 1)}_r) w^{(\ell + 1)}_{jr}
+	\end{align*}
+	
+	Notice how recursion has already crept in: overall, the equation we have derived says that in order to know $\frac{\partial c_i}{\partial a^{(\ell)}_j}$ for layer $\ell$, we must already know it for layer $\ell + 1$.
+	
+	Second, we have
+	
+	\begin{align*}
+		\frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} = \frac{\partial \sigma(z^{(\ell)}_j)}{\partial z^{(\ell)}_j} = \sigma'(z^{(\ell)}_j).
+	\end{align*}
+	
+	Third, we have
+	
+	\begin{align*}
+		\frac{\partial z^{(\ell)}_j}{\partial w^{(\ell)}_{kj}} &=  \frac{\partial}{\partial w^{(\ell)}_{kj}}\left(\sum_{r = 1}^{n_{\ell-1}} w^{(\ell)}_{rj} a^{(\ell-1)}_r + b^{(\ell)}_j\right) \\
+		&= \left(\sum_{r = 1}^{n_{\ell-1}} \frac{\partial}{\partial w^{(\ell)}_{kj}}\left(w^{(\ell)}_{rj} a^{(\ell-1)}_r\right) + \frac{\partial b^{(\ell)}_j}{\partial w^{(\ell)}_{kj}}\right) \\
+		&= \left(\sum_{r = 1}^{n_{\ell-1}} \frac{\partial}{\partial w^{(\ell)}_{kj}}\left(w^{(\ell)}_{rj}\right) a^{(\ell-1)}_r \right) \\
+		&= \left(\sum_{r = 1}^{n_{\ell-1}} \delta_{rk} a^{(\ell-1)}_r \right), \text{ where $\delta_{rk} = 1$ when $r = k$ and $\delta_{rk} = 0$ when $r \neq k$} \\
+		&= a^{(\ell-1)}_k.
+	\end{align*}
+	
+	Fourth, we have
+	
+	\begin{align*}
+		\frac{\partial z^{(\ell)}_j}{\partial b^{(\ell)}_j} = \frac{\partial}{\partial b^{(\ell)}_j}\left(\sum_{r = 1}^{n_{\ell-1}} w^{(\ell)}_{rj} a^{(\ell-1)}_r + b^{(\ell)}_j\right) = 1.
+	\end{align*}
+	
+	So the partial derivatives for layer $\ell$ are
+	
+	\begin{align*}
+		&\frac{\partial c_i}{\partial w^{(\ell)}_{kj}} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial w^{(\ell)}_{kj}} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \sigma'(z^{(\ell)}_j) a^{(\ell - 1)}_k, \\
+		&\frac{\partial c_i}{\partial b^{(\ell)}_j} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial b^{(\ell)}_j} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \sigma'(z^{(\ell)}_j), \\
+		&\text{where } \frac{\partial c_i}{\partial a^{(\ell)}_j} = \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell + 1)}_r} \frac{\partial a^{(\ell + 1)}_r}{\partial z^{(\ell + 1)}_r} w^{(\ell + 1)}_{jr}.
+	\end{align*}
+	
+	Again, notice recursion in the expression for $\frac{\partial c_i}{\partial a^{(\ell)}_j}$. In order to compute $\frac{\partial c_i}{\partial a^{(\ell)}_j}$, we must already know it for layer $\ell + 1$.
+	
+	\subsection*{Partial derivatives in the last layer}
+	
+	If we are to know determine $\frac{\partial c_i}{\partial a^{(\ell)}_j}$ for all layers $\ell$, we need to know it for the last layer, i.e. when $\ell = L$. If we know it for the last layer, then we know it for the prior to last layer. If we know it for the prior to last layer, we know it for the layer before that. And so on.
+	
+	Additionally, notice that the expressions for the partial derivatives of $c_i$ we derived above are only applicable for layers $\ell < L$, since we assumed the existence of a layer $\ell + 1$ when computing them. Thus, we need to compute $\frac{\partial c_i}{\partial a^{(L)}_j}$ \textit{and} the partial derivatives of $c_i$ for layer $L$. We will start with the later; it turns out that in the course of doing so we will end up doing the former.
+	
+	We compute the partial derivatives for layer $L$ now. We have
+	
+	\begin{align*}
+		\frac{\partial c_i}{\partial w^{(L)}_{kj}} &= \frac{\partial c_i}{\partial a^{(L)}_j} \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{kj}}, \\
+		\frac{\partial c_i}{\partial b^{(L)}_j} &= \frac{\partial c_i}{\partial a^{(L)}_j} \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}.
+	\end{align*}
+	
+	Just as before, we compute the partial derivatives appearing in the products. First, we have
+	
+	\begin{align*}
+		\frac{\partial c_i}{\partial a^{(L)}_j} &= \frac{\partial}{\partial a^{(L)}_j} \sum_{r = 1}^{n_L} (y_{ir} - a^{(L)}_r)^2 \\
+		&= \sum_{r = 1}^{n_L} 2(y_{ir} - a^{(L)}_r)\frac{\partial}{\partial a^{(L)}_j}\left(y_{ir} - a^{(L)}_r\right) \\
+		&= \sum_{r = 1}^{n_L} 2(y_{ir} - a^{(L)}_r)(-\delta_{rj})\text{, where $\delta_{rj} = 1$ when $r = j$ and $\delta_{rj} = 0$ when $r \neq j$} \\
+		&= 2(a^{(L)}_j - y_{ij}).
+	\end{align*}
+	
+	We determined the remaining partial derivatives previously in our computations for an arbitrary layer $\ell$. Thus the partial derivatives for layer $L$ are
+	
+	\begin{align*}
+		\frac{\partial c_i}{\partial w^{(L)}_{kj}} &= \frac{\partial c_i}{\partial a^{(L)}_j} \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{kj}} = 2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j) a^{(L - 1)}_k, \\
+		\frac{\partial c_i}{\partial b^{(L)}_j} &= \frac{\partial c_i}{\partial a^{(L)}_j} \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j} = 2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j).
+	\end{align*}
+	
+	\subsection*{The ``raw'' backpropagation equations}
+	
+	We now summarize the equations we've derived for the partial derivatives in layer $L$ and layer $\ell$, $\ell < L$:
+	
+	\underline{Layer $L$}
+	\begin{align*}
+		\frac{\partial c_i}{\partial w^{(L)}_{kj}} &= \frac{\partial c_i}{\partial a^{(L)}_j} \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{kj}} = 2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j) a^{(L - 1)}_k, \\
+		\frac{\partial c_i}{\partial b^{(L)}_j} &= \frac{\partial c_i}{\partial a^{(L)}_j} \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j} = 2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j).
+	\end{align*}
+	
+	\underline{Layer $\ell$, $\ell < L$}
+	
+	\begin{align*}
+		&\frac{\partial c_i}{\partial w^{(\ell)}_{kj}} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial w^{(\ell)}_{kj}} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \sigma'(z^{(\ell)}_j) a^{(\ell - 1)}_k, \\
+		&\frac{\partial c_i}{\partial b^{(\ell)}_j} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial b^{(\ell)}_j} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \sigma'(z^{(\ell)}_j), \\
+		&\text{where } \frac{\partial c_i}{\partial a^{(\ell)}_j} = \sum_{r = 1}^{n_{\ell+1}} \frac{\partial c_i}{\partial a^{(\ell + 1)}_r} \frac{\partial a^{(\ell + 1)}_r}{\partial z^{(\ell + 1)}_r} w^{(\ell + 1)}_{jr}.
+	\end{align*}
+	
+	These equations determine all partial derivatives of $c_i$ with respect to arbitrary weights and arbitrary biases; they determine the the gradient $\nabla c_i$.
+	
+	Of course, as has already been noted, the expression for $\frac{\partial c_i}{\partial a^{(\ell)}_j}$ is recursive. In order to know its value for some neuron in layer $\ell$, we must already know it for all neurons in layer $\ell + 1$. This is fine, of course, since we know how to compute its value in the last layer, layer $L$. Knowledge of this partial derivative in layer $L$ layer can thus be ``propagated back'' from layer $L$ to layer $L - 1$, and from layer $L - 1$ to layer $L - 2$, and from layer $L - 2$ to layer $L - 3$, until finally it is known for all layers.
+	
+	The recursion used to compute $\frac{\partial c_i}{\partial a^{(\ell)}_j}$, which is relatively simple as far as recursion goes, is called the \textit{backpropagation algorithm}. The above equations are called the \textit{backpropagation equations}.
+	
+	\subsection*{A nicer presentation of the backpropagation equations}
+	
+	The backpropagation equations we've derived are practical in that they allow us to compute the gradient $\nabla c_i$, but their presentation can still be much improved by encapsulating the expressions that look very different across different layers into a single variable.
+	
+	The variable that achieves what we want is $\delta^{(\ell)}_j := \frac{\partial c_i}{\partial z^{(\ell)}_j}$. With this definition, the backpropagation equations become\footnote{It is necessary to multiply both sides of the third layer $\ell$ equation by $\frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} = \sigma'(z^{(\ell)}_j)$, and use the definition $\delta^{(\ell)}_j := \frac{\partial c_i}{\partial z^{(\ell)}_j} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j}$.}:
+	
+	\begin{align*}
+		&\frac{\partial c_i}{\partial w^{(\ell)}_{kj}} = \delta^{(\ell)}_j a^{(\ell - 1)}_k, \\
+		&\frac{\partial c_i}{\partial b^{(\ell)}_j} = \delta^{(\ell)}_j, \\
+		&\text{where } \delta^{(\ell)}_j =
+		\begin{cases}
+			2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j) & \ell = L \\
+			\left( \sum_{r = 1}^{n_{\ell+1}} \delta^{(\ell + 1)}_r w^{(\ell + 1)}_{jr} \right) \sigma'(z^{(\ell)}_j) & \ell < L
+		\end{cases}.
+	\end{align*}
+	
+	\subsection*{Interpretation of $\delta^{(\ell)}_j$}
+	
+	In the literature, the variable $\delta^{(\ell)}_j := \frac{\partial c_i}{\partial z^{(\ell)}_j}$ is referred to as the ``error''.
+	
+	The best possible justification for this terminology is that since $|\frac{\partial c_i}{\partial z^{(\ell)}_j}|$ is large whenever the cost is very sensitive to changes in ``preactivation value'' $z^{(\ell)}_j$, and since whenever the cost is sensitive in this way, it can be decreased by nudging $z^{(\ell)}_j$, then there must be a lot of error in the preactivation value $z^{(\ell)}_j$ when $|\frac{\partial c_i}{\partial z^{(\ell)}_j}|$ is large. This is very much a heuristic, though. Really, there's not much good reason other than algebraic convenience for referring to $\frac{\partial c_i}{\partial z^{(\ell)}_j}$ as ``error''. And there are several reasons why it should \textit{not} be referred to as ``error''. Most glaringly, partial derivatives such as $\frac{\partial c_i}{\partial z^{(\ell)}_j}$ are \textit{rates}, and can never rightly be implied to be increment of absolute change, which is exactly what an error is. Also, what's special about the partial derivative with respect to $z^{(\ell)}_j$? Why can't the partial derivative with respect to $a^{(\ell)}_j$, $\frac{\partial c_i}{\partial a^{(\ell)}_j}$, be called ``error''? If anything should be called ``error'', it's the cost function $c$ or the per-example cost function $c_i$, as those do in fact measure actual error.
+	
+	\subsection*{Revisiting intuition}
+	
+	Let's revisit some intuition from the last video, ``Backpropagation, intuitively''. In the previous article on that video, we claimed that the steepest descent in the cost $c_{ij}$ (the cost for the $i$th training example in the $j$th last layer activation) is achieved by following these rules:
+	
+	\begin{itemize}
+		\item Weights should be changed a lot relative to the other weights only if the activations they multiply are influential.
+		\item Prior to last layer activations should be changed a lot relative to the other prior to last layer activations only if the weights they multiply are influential.
+	\end{itemize}
+	
+	It is in fact the backpropagation equations that formalize exactly what is meant by this! If you compare the first two backpropagation equations to the above items, you will see they conform to the above rules.
+\end{document}
