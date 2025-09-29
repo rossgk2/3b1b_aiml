@@ -1,0 +1,115 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry
+{
+	a4paper,
+	total={170mm,257mm},
+	left=20mm,
+	top=20mm,
+}
+
+\begin{document}
+	\section*{Addendum on computational universality}
+	
+	There is one very important question the 3Blue1Brown series doesn't consider: can neural networks actually solve every computational problem? Are neural networks \textit{computationally universal}?
+	
+	Given the prevalence of AI technology today, one would suspect that answer to this question is at least ``in practice, yes'', if not an outright ``yes''. Since a sense of the answer to this question is intuitive, and since the deeper explanation for that answer isn't of crucial importance right away, it makes sense why 3B1B didn't cover this topic in the video series. 
+	
+	Nevertheless, the [book](http://neuralnetworksanddeeplearning.com/index.html) by Michael Nielsen that the video series draws some inspiration from gives some great perspective on this topic. The perspective is a bit scattered through the book, so I've decided to collect it all into one article here.
+	
+	\subsection*{Perceptrons and sigmoid neurons}
+	
+	In the 3B1B series, we only knew one type of neuron. In Nielsen's terminology, the neurons we focused on in the 3B1B series are divided into two types, \textit{sigmoid neurons} and \textit{perceptron neurons}.
+	
+	Let's review what we know about sigmoid neurons. These are just the neurons that we just referred to as ``neurons'' in the main articles on the 3B1B series.
+	
+	A sigmoid neuron computes its activation value $a$ as the result of applying a nonlinear ``squishification'' function $\sigma$ to the preactivation $z$,
+	
+	\begin{align*}
+		a = \sigma(z) = \sigma(w_1 a_1 + ... + w_n a_n + b).
+	\end{align*}
+	
+	Recall that one common choice of the ``squishification'' function $\sigma$ is given by $\sigma(x) := 1/(1 + e^{-x})$. It's very important to notice that for this definition of $\sigma$, the plot of $\sigma(x)$ versus $x$ looks like a smoothed out step function.
+	
+	The discrete counterpart to the continuous sigmoid neuron is the \textit{perceptron neuron}, or \textit{perceptron}, which computes its activation value $a$ by composing the step function with the preactivation,
+	
+	\begin{align*}
+		&a = \text{step}(z)
+		= \text{step}(w_1 a_1 + ... + w_n a_n + b), \\
+		&\text{where } \text{step}(z) =
+		\begin{cases}
+			1 & z > 0 \\
+			0 & z \leq 0
+		\end{cases}.
+	\end{align*}
+	
+	In all: \textit{sigmoid neurons (which you can think of as ``continuous neurons'') use the smoothed out and continuous step function $\sigma$, while perceptron neurons (which you can think of as ``discrete neurons'') use the regular and discrete step function} $\text{step}$.
+	
+	\subsection*{Perceptrons are computationally universal}
+	
+	Now that we know what sigmoid neurons and perceptrons are, let's forget about sigmoid neurons for a second and think about working with perceptrons. Is it possible to build a neural network with perceptrons that's just as effective as the ones involving sigmoid neurons we've discussed so far?
+	
+	We only need to look to the beginning of Nielsen's book for the answer. If we could configure a perceptron of two inputs to act like a \textit{nand} gate, then, since \textit{any} other logic gate can be built out of \textit{nand} gates\footnote{This is because the fundamental logic gates \textit{and}, \textit{or}, and \textit{not} can be defined in terms of \textit{nand}. We have $\text{not } x = x \text{ nand } x$, $x \text{ and } y = \text{not}(x \text{ nand } y)$, $x \text{ or } y = \text{not}((\text{not } x) \text{ and } (\text{not } y))$.}, we would be able to conclude that \textit{any} logic gate can be built out of perceptrons, and thus that structures obtained by chaining together such perceptrons- single-layer networks of perceptrons- are computationally universal.
+	
+	Nielsen explains how this can be done. If we have a perceptron of two inputs, thus having two weights $w_1, w_2$, and one bias $b$, then we simply use $w_1 = -2$, $w_2 = -2$, $b = 3$. With these choices of $w_1, w_2, b$, we have:
+	
+	\begin{align*}
+		&(0, 0) \mapsto \text{step}(-2 \cdot 0 + -2 \cdot 0 + 3) = \text{step}(0 + 3) = \text{step}(3) = 1, \\
+		&(1, 0) \mapsto \text{step}(-2 \cdot 1 + -2 \cdot 0 + 3) = \text{step}(-2 + 3) = \text{step}(1) = 1, \\
+		&(0, 1) \mapsto \text{step}(-2 \cdot 0 + -2 \cdot 1 + 3) = \text{step}(-2 + 3) = \text{step}(1) = 1, \\
+		&(1, 1) \mapsto \text{step}(-2 \cdot 1 + -2 \cdot 1 + 3) = \text{step}(-4 + 3) = \text{step}(-1) = 0.
+	\end{align*}
+	
+	This mimics the truth table of \textit{nand}. So, we have shown what we claimed: single-layer networks of perceptrons are computationally universal.
+	
+	Since every network of perceptrons contains a single-layer network of perceptrons, it follows that general networks of perceptrons are computationally universal.
+	
+	\subsection*{Networks of perceptrons can't be easily trained}
+	
+	We've learned that networks of perceptrons are computationally universal. A network of perceptrons can in theory implement any computer program. That's pretty cool!
+	
+	If we want to \textit{actually obtain} a network of perceptrons that implement a given computer program, though, we have to be able to train the network; we have to be able to repeatedly nudge its output closer and closer to the desired output.
+	
+	Unfortunately, since perceptron activations are defined in terms of the discontinuous step function, they are discontinuous functions of weights and biases. A small change in the network's weights and biases doesn't result in a predictable, small change in the network's output. This makes it unfeasible to train networks of perceptrons.
+	
+	\subsection*{Networks of sigmoid neurons can be easily trained}
+	
+	Since sigmoid neurons use smoothed out step functions, we \textit{can} train networks of sigmoid neurons. In fact, this smoothness property is exactly why sigmoid neurons were invented!
+	
+	But now the question flips around back from training to universality. We know we can train networks of sigmoid neurons. Are networks of sigmoid neurons \textit{computationally universal}, though?
+	
+	\subsection*{Networks of sigmoid neurons are computationally universal}
+	
+	One would imagine that networks of sigmoid neurons are computationally universal, since their cousins- networks of perceptrons- are. They are indeed (with some caveats), but we have to explain why!
+	
+	First, we reframe the problem of computational universality, which is the problem of implementing an arbitrary computer program''. Since every program is ultimately implemented in terms of numbers under the hood, every program corresponds to some collection of subprograms, each of which corresponds to some function $\mathbb{R} \rightarrow \mathbb{R}$. If we can train a network of sigmoid neurons so that it outputs an arbitrary function $f:\mathbb{R} \rightarrow \mathbb{R}$, then we've shown that we can train a network of sigmoid neurons to implement any subprogram, and thus any program.
+	
+	Here is Nielsen's explanation for why a network (specifically, a \textit{single-layer} network) of sigmoid neurons taking one input $a_1$  can learn any function $f:\mathbb{R} \rightarrow \mathbb{R}$:
+	
+	\begin{itemize}
+		\item The graph of each sigmoid neuron's activation $a = \sigma(w_1 a_1 + b)$ versus its input $a_1$ is a ``smoothed out'' step function.
+		\item Since we can add step functions toegether to get a ``bump'' function, we can add together smoothed out step functions to get a smoothed out bump function.
+		\item We can approximate $f$ as a weighted sum of smoothed out bump functions, i.e., as a piecewise function that is relatively constant on each piece. The more smoothed out bump functions we use, the better the approximation. We can achieve arbitrary precision in our approximation by increasing the number of bump functions used.
+		\item Since each smoothed bump function is a sum of sigmoid neuron activations, an equivalent statement is that we can approximate $f$ with arbitrary precision as a weighted sum of sigmoid neuron activation values.
+		\item Therefore, a single-layered network of single-input sigmoid neurons can be used to approximate $f:\mathbb{R} \rightarrow \mathbb{R}$ with arbitrary precision.
+	\end{itemize}
+	
+	\subsubsection*{Caveats}
+	
+	There's two caveats. You've probably already noticed the first one: while we can approximate $f:\mathbb{R} \rightarrow \mathbb{R}$ with arbitrary precision, there will always in general be some nonzero error. The second is that $f:\mathbb{R} \rightarrow \mathbb{R}$ must be continuous.
+	
+	So, really, networks of sigmoid neurons are computationally universal \textit{in practice}.
+	
+	\subsection*{Deep neural networks}
+	
+	You may have noticed that when we showed computational universality for networks of perceptrons networks of sigmoid neurons, we only needed to use single-layer networks to do so. Thus, not only are networks of perceptrons and networks of sigmoid neurons computationally universal, but so too are single-layer networks of perceptrons and single-layer networks of sigmoid neurons.
+	
+	As you might imagine, there still is a benefit to using more than one layer in a network. Nielsen explains how there is research showing that "deeper" networks with more layers can achieve computational universality with fewer neurons:
+	
+	\begin{quote}
+		There are, in fact, mathematical proofs showing that for some functions very shallow circuits require exponentially more circuit elements to compute than do deep circuits. For instance, a famous series of papers in the early 1980s showed that computing the parity of a set of bits requires exponentially many gates, if done with a shallow circuit. On the other hand, if you use deeper circuits it's easy to compute the parity using a small circuit: you just compute the parity of pairs of bits, then use those results to compute the parity of pairs of pairs of bits, and so on, building up quickly to the overall parity. Deep circuits thus can be intrinsically much more powerful than shallow circuits.
+	\end{quote}
+\end{document}

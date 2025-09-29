@@ -10,4 +10,11 @@ This repository is a collection of companion articles for the videos on AI and m
 | Backpropagation calculus                    | [Article](Backpropagation%20calculus.ipynb)                    | [Video](https://www.youtube.com/watch?v=tIeHLnjs5U8)         |
 | Extra: summary article!                     | [Article](Overview%20of%20neural%20networks.ipynb)                 |                                                              |
 
+I've also written an [article on computational universality](Addendum%20on%20computational%20universality.ipynb) that draws from [Michael Nielsen's excellent book](http://neuralnetworksanddeeplearning.com/index.html) on neural networks. This topic isn't covered in the 3Blue1Brown video series.
+
 I plan to add articles on the videos for large language models and transformers soon.
+
+
+
+
+
