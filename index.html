@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<meta charset="UTF-8">
+<title>3Blue1Brown Companion Articles</title>
+<style>
+  .author-box {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+    font-size: 0.95rem;
+    color: #555;
+    font-weight: 500;
+  }
+
+  body {
+    font-family: system-ui, sans-serif;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  h1 {
+    font-weight: 600;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    padding: 20px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .toc-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .toc-links a {
+    display: inline-block;
+    margin-right: 16px;
+    color: #0066cc;
+    text-decoration: none;
+  }
+
+  .toc-links a:hover {
+    text-decoration: underline;
+  }
+
+  .toc-description {
+    margin-top: 10px;
+    color: #444;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="author-box">
+  <div class="author-name"><a href = "https://github.com/rossgk2"> Ross Grogan </a></div>
+</div>
+
+<h1>AI Companion Articles</h1>
+
+<p> Below is a collection of articles I've written on the basics of theoretically understanding AI. Collectively, the articles are the "companion articles" to the <a  href = "https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi"> video series on AI </a> created by <a href = "https://www.youtube.com/@3blue1brown"> 3Blue1Brown</a>. The articles follow the videos extremely closely and are intended to serve as the unofficial textual versions of the videos.
+</p>
+
+<ul class="toc-list">
+
+  <li class="toc-item">
+    <div class="toc-title">But what is a neural network?</div>
+    <div class="toc-links">
+      <a href="https://rossgk2.github.io/3b1b_aiml/But%20what%20is%20a%20neural%20network.html">Article</a>
+      <a href="https://www.youtube.com/watch?v=aircAruvnKk&pp=ygUcYnV0IHdoYXQgaXMgYSBuZXVyYWwgbmV0d29yaw%3D%3D">Video</a>
+    </div>
+    <div class="toc-description">
+      We pose the "problem" of image recognition, and reason about how we can build an AI to solve it. The kind of AI we end up considering is a <i>neural network</i>- a composition of many little computation machines called <i>neurons</i>. We explain why it is plausible for a network like this to solve the problem, and additionally why it is natural for a successful network to be arranged in a layered structure. Then we go in-depth with some formulas, using the example of edge detection to illustrate why it is natural for neurons to operate on their inputs by computing <i>weighted sums</i>, and why it is helpful to use $\sigma$ functions for normalization (or "squishification"- as 3Blue1Brown puts it).
+    </div>
+  </li>
+
+  <li class="toc-item">
+    <div class="toc-title">Gradient descent, how neural networks learn</div>
+    <div class="toc-links">
+      <a href="https://rossgk2.github.io/3b1b_aiml/Gradient%20descent,%20how%20neural%20networks%20learn.html">Article</a>
+      <a href="https://www.youtube.com/watch?v=IHZwWFHWa-w">Video</a>
+    </div>
+    <div class="toc-description">
+      We introduce the core principle behind modern AI: training. We learn how when we have training data we can measure the error rate of a neural network with its <i>cost function</i>, or <i>loss function</i>. Then we qualitatively describe how in a process called <i>gradient descent</i>, we can compute the <i>gradient</i> of the cost function and use it to nudge the configuration of the network so that the loss function is decremented as efficiently as possible.
+    </div>
+  </li>
+
+  <li class="toc-item">
+    <div class="toc-title">Backpropagation, intuitively</div>
+    <div class="toc-links">
+      <a href="https://rossgk2.github.io/3b1b_aiml/Backpropagation,%20intuitively.html">Article</a>
+      <a href="https://www.youtube.com/watch?v=Ilg3gGewQ5U">Video</a>
+    </div>
+    <div class="toc-description">
+      With the broad strokes of neural networks sketched by the previous two articles and videos, we start to use some more formulas and outline how the gradient of the cost function is actually computed. We describe how taking the gradient of the <i>entire network's</i> cost function reduces to the problem of computing the gradients of cost functions associated with <i>individual neurons</i>, in a recursive manner that starts at the last layer and advances towards the first. This amounts to an intuitive description of the <i>backpropagation</i> algorithm.
+    </div>
+  </li>
+
+  <li class="toc-item">
+    <div class="toc-title">Backpropagation calculus</div>
+    <div class="toc-links">
+      <a href="https://rossgk2.github.io/3b1b_aiml/Backpropagation%20calculus.html">Article</a>
+      <a href="https://www.youtube.com/watch?v=tIeHLnjs5U8">Video</a>
+    </div>
+    <div class="toc-description">
+      This article is the "all the details" version of the previous article: we derive the standard <i>backpropagation equations</i> from the ground up. The approach is of course more formula-heavy than the one in the previous article; suprisingly, it is also organizationally more direct. After we derive a verbose form of the backpropagation equations, we introduce the standard notation $\delta^{(\ell)}_j$, which makes them more concise.
+    </div>
+  </li>
+
+  <li class="toc-item">
+    <div class="toc-title">Extra: summary article</div>
+    <div class="toc-links">
+      <a href="https://rossgk2.github.io/3b1b_aiml/Overview%20of%20neural%20networks.html">Article</a>
+    </div>
+    <div class="toc-description">
+      We summarize all of the content presented in the previous articles. We also refine an idea that was alluded to in the very first article, which is that the core idea behind neural networks is to take advantage of the fact that <i>patterns are made up of subpatterns</i>.
+    </div>
+  </li>
+
+  <li class="toc-item">
+    <div class="toc-title">Extra: computational universality</div>
+    <div class="toc-links">
+      <a href="https://rossgk2.github.io/3b1b_aiml/Addendum%20on%20computational%20universality.html">Article</a>
+    </div>
+    <div class="toc-description">
+      The "companion articles" are inspired by 3Blue1Brown's video series. And 3Blue1Brown's video series is inspired by <a href="http://neuralnetworksanddeeplearning.com/index.html">Michael Nielsen's excellent book</a> on neural networks. The main concept from Nielsen's book <i>not</i> present in the video series is that of <i>computational universality</i>, which addresses the question: "How can we be sure that a neural network can solve any computational problem?" This article explores that topic.
+    </div>
+  </li>
+
+</ul>
+
+I plan to add articles on the videos for large language models and transformers soon.
+
+</body>
+</html>
