@@ -91,7 +91,7 @@
 	
 	\begin{itemize}
 		\item The graph of each sigmoid neuron's activation $a = \sigma(w_1 a_1 + b)$ versus its input $a_1$ is a ``smoothed out'' step function.
-		\item Since we can add step functions toegether to get a ``bump'' function, we can add together smoothed out step functions to get a smoothed out bump function.
+		\item Since we can add step functions together to get a ``bump'' function, we can add together smoothed out step functions to get a smoothed out bump function.
 		\item We can approximate $f$ as a weighted sum of smoothed out bump functions, i.e., as a piecewise function that is relatively constant on each piece. The more smoothed out bump functions we use, the better the approximation. We can achieve arbitrary precision in our approximation by increasing the number of bump functions used.
 		\item Since each smoothed bump function is a sum of sigmoid neuron activations, an equivalent statement is that we can approximate $f$ with arbitrary precision as a weighted sum of sigmoid neuron activation values.
 		\item Therefore, a single-layered network of single-input sigmoid neurons can be used to approximate $f:\mathbb{R} \rightarrow \mathbb{R}$ with arbitrary precision.
