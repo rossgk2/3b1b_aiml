@@ -112,7 +112,7 @@ So, a properly trained embedding space will "know" that "one" is less plural tha
 
 ## The steps in a transformer
 
-### Before attention
+### Before attention: tokenization and embedding
 
 ### The goal of attention: embeddings beyond words
 
@@ -126,7 +126,7 @@ In this state of things, the embedding vectors just represent mere, simple words
 
 This is precisely what a transformer achieves. As embedding vectors progress through more and more transformer operations, they begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "King" not only corresponds to "male ruler of a nation", but also somehow points in a specific and nuanced direction that encodes "this is a king who lived in Scotland, who achieved his post after murdering the previous king, and who's being described in Shakespearian language".
 
-### After attention
+### After attention: unembedding
 
 The *embedding matrix* $\mathbf{W}_E$ is a matrix whose columns are all of the words in the dictionary
 
