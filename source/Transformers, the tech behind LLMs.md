@@ -79,9 +79,9 @@ $$
 $$
 [^3]: We want the embedding to be a vector space isomorphism between the space of words and the space of embedded vectors.
 
-Of course, it's not really clear how one is supposed to subtract "man" from "woman". However, if we could take the embedding vector of "man", we *could* subtract that from the embedding vector of "woman". And we could do the same for "queen" and "king". So, we might expect that we would have something like
+Of course, it's not really clear how one is supposed to subtract "man" from "woman". However, if we could take the embedding vector of "man", we *could* subtract that from the embedding vector of "woman". And we could do the same for "queen" and "king". So, if $\mathbf{E}$ is the embedding function, we might expect that we would have something like
 $$
-E(\text{woman}) - E(\text{man}) \approx E(\text{queen}) - E(\text{king})
+\mathbf{E}(\text{woman}) - \mathbf{E}(\text{man}) \approx \mathbf{E}(\text{queen}) - \mathbf{E}(\text{king}).
 $$
 
 Marvelously, when we use an actual embedding library to check this, we find that it is indeed true.
@@ -90,11 +90,25 @@ At this point, the obvious question is- how in the world was the machine learnin
 
 ### Dot product semantics
 
+There's even more semantics to be explored in the embedding space. This peculiarity, though, requires a bit of prior knowledge from linear algebra. So, here is a quick crash course:
 
+> There is an operation between two vectors $\mathbf{v}$ and $\mathbf{w}$ that is denoted by $\vv \cdot \ww$, that is read out loud as "v dot w", and is defined to be the result of multiplying the projection (the "shadow") of $\mathbf{v}$ onto $\mathbf{w}$ by the length of $\mathbf{w}$. Thus, the dot product of two vectors is a number. When we have vectors $\mathbf{v} = \begin{pmatrix} v_1 \\\\ vdots \\\\ v_n \end{pmatrix}$ and $\mathbf{w} = \begin{pmatrix} w_1 \\\\ vdots \\\\ w_n \end{pmatrix}$, it is possible to prove that the dot product of $\mathbf{v}$ and $\mathbf{w}$ is equal to the result of multiplying corresponding components and summing them: $\vv \cdot \ww = v_1 w_1 + ... + v_n w_n$.
 
-$\textbf{plur} = E(\text{cats}) - E(\text{cat})$
+For the full details, you can see [my book on linear algebra, tensors, and manifolds](https://github.com/rossgk2/Linear-algebra-tensors-manifolds). For our purposes, though, all that need be understood is that the dot product of two vectors is a tool we are fortunate to have, since it is both geometrically useful (as it measures a vector projection) and easy to compute (as all you have to do is multiply and sum vector components).
 
-$\textbf{plur} \cdot E(\text{one}) < \textbf{plur} \cdot E(\text{two}) < \textbf{plur} \cdot E(\text{three}) < \textbf{plur} \cdot E(\text{four})$
+Now we return to word embeddings. 
+
+You might imagine that if you take any plural version of a noun (like "cats") and then "subtract" the singular version ("cat") you will end up with the letter "s". Or, more fundamentally, you end up with the notion of plurality- after all, in English, we pluralize nouns by adding "s" to them.
+
+We can formalize this idea with embeddings by defining a *plurality embedding* to be a difference of any plural embedding (like "cats") and its corresponding singular embedding ("cat"):
+$$
+\textbf{plur} := \mathbf{E}(\text{cats}) - \mathbf{E}(\text{cat}).
+$$
+Now, here is the magic. If we use the dot product to measure the projection of the embeddings of the English words "one", "two", "three", and "four" onto this plurality vector, we see that the measurements are increasing:
+$$
+\mathbf{E}(\text{one}) \cdot \textbf{plur} < \mathbf{E}(\text{two}) \cdot \textbf{plur} < \mathbf{E}(\text{three}) \cdot \textbf{plur} < \mathbf{E}(\text{four}) \cdot \textbf{plur}
+$$
+So, a properly trained embedding space will "know" that "one" is less plural than "two", which is less plural than "three", which is less plural than "four".
 
 ### Embeddings in a transformer
 
