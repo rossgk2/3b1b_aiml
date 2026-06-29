@@ -112,30 +112,46 @@ So, a properly trained embedding space will "know" that "one" is less plural tha
 
 ## The steps in a transformer
 
-Now, we're ready to revisit the steps in a transformer in more depth. As mentioned before, we save the full explanation of the attention mechanism for the next article, and only outline what the goal of attention is for now. 
+Now that we're ready to revisit the steps in a transformer in more depth, it'll help to have an example. Let's suppose a user types the following into a chatbot:
 
-### Before attenton: tokenization and embedding
+> Harry Potter was a highly unusual
 
-**(Tokenization).** First, the input is first broken up into a bunch of little pieces called *tokens*.
+We're expecting that the chatbot correctly predict the next word in the sentence, "boy". 
 
-**(Embedding).** Then, the embedding function, which is secretly a neural network trained to embed words in the desired way, is applied to each token to produce embedded vectors. Note: in the video, Grant conceptualizes the embedding function as a matrix with one column vector for every word in the dictionary.
+Let's see how a transformer-based chatbot would handle this!
+
+### Before attention: tokenization and embedding
+
+**(Tokenization).** First, the input is first broken up into a bunch of little pieces called *tokens*. In our example, the tokens might be "Harry", "Potter", "was", "a", "highly", "unusual".
+
+**(Embedding).** Then, the embedding function, which is secretly a neural network trained to embed words in the desired way, is applied to each token to produce embedded vectors: $\mathbf{E}(\text{Harry})$, $\mathbf{E}(\text{Potter})$, $\mathbf{E}(\text{was})$, $\mathbf{E}(\text{a})$, $\mathbf{E}(\text{highly})$, $\mathbf{E}(\text{unusual})$. We can conceptualize the embedding function as a matrix with one column vector for every word in the dictionary. This matrix is called the *embedding matrix* and is denoted $\mathbf{W}_E$.
+
+As we pass to the next step, it's convenient to conceptualize our list of embedded vectors as being the column vectors of a matrix $\mathbf{X}$,
+$$
+\mathbf{X} := \begin{pmatrix} | & | & | & | & | & | \\ \mathbf{E}(\text{Harry}) & \mathbf{E}(\text{Potter}) & \mathbf{E}(\text{was}) & \mathbf{E}(\text{a}) & \mathbf{E}(\text{highly}) & \mathbf{E}(\text{unusual}) \\ | & | & | & | & | & | \end{pmatrix}
+$$
+
 
 ### The goal of attention: embeddings beyond words
 
-**(Attention, feedforward, repeat).** Then, the attention mechanism is applied, again and again. Strictly speaking, feedforward layers are also involved- but they are not the core new idea at play here, and are only "touching up", just slightly modifying, the results of each attention block. 
+**(Attention, feedforward, repeat).** Our matrix $\mathbf{X}$ of embedded vectors arrives at the attention step. Its first column vector, "Harry", points in whatever direction in the embedding space is associated with traditional British male names. 
 
-To understand what the goal of these attention blocks are, consider the following input:
+In other words, the first column vector, and all of the others, represent mere, simple words. But, precisely because they live in a high-dimensional space, they have the *capacity* to soak in so much more context than this.
 
-> "The King doth wake tonight and takes his rouse"
-
-We can associate each input word with an embedding vector so that, for instance, the embedding vector for "King" lives in that portion of the embedding space associated with "male ruler of a nation".
-
-In this state of things, the embedding vectors just represent mere, simple words. But, precisely because they live in high-dimensional spaces, they have the *capacity* to soak in so much more context than this.
-
-And this is the goal of the attention mechanism. The goal is that, as embedding vectors progress through more and more attention blocks (and associated feedforward layers), they begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "King" not only corresponds to "male ruler of a nation", but also somehow points in a specific and nuanced direction that encodes "this is a king who lived in Scotland, who achieved his post after murdering the previous king, and who's being described in Shakespearian language".
+Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associated feedforward layers), the hope is that its column vectors begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "Harry" is not only points in the direction associated with traditional British male names, but also somehow in a more specific and nuanced direction that encodes "this Harry is the famous fictional character, and is likely being referred to in the beginning of a book".
 
 ### After attention: unembedding
 
-The *embedding matrix* $\mathbf{W}_E$ is a matrix whose columns are all of the words in the dictionary
+**(Unembedding). **After the 
 
-"Turning words into vectors was common practice in machine learning long before transformers, but it's a little weird if you've never seen it before, and it sets the foundation for everything that follows, so let's take a moment to get familiar with it"
+$\mathbf{W}_U$; has dimensions equal to that of the transpose of the embedding matrix
+
+### Softmax
+
+The outputs that you get by default can be anything in the range $(-\infty, \infty)$
+
+Softmax is the standard way to turn an arbitrary list of numbers into a valid distribution in such a way that the largest values end up closest to 1, and the smaller values end up very close to 0
+
+When you add a "temperature" parameter to softmax, more weight is given to the lower values
+
+inputs to softmax are known as "logits"
