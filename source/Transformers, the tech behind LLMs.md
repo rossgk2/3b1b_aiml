@@ -53,9 +53,9 @@ To begin understanding how a transformer produces the probability distribution t
 
 The third step, *attention*, is the core idea at the heart of transformers. It was aptly featured in the title of the seminal 2017 Google research paper that introduced transformers, *Attention is All You Need*. 
 
-Since attention is a relatively complicated mechanism, Grant saves the discussion of exactly how it works for the next video. The current video and article are dedicated to explaining everything else- what happens at the very beginning of the transformer, and what happens at the end. This "everything else" would have been second nature to any machine learning engineer when *Attention is All You Need* was published, so it's worth taking time to familiarize ourselves with it.
+Since attention is a relatively complicated mechanism, Grant saves the discussion of exactly how it works for the next video. The current video and article are dedicated to explaining everything else- some background on word embeddings, what happens before attention, what the goal of attention is, and what happens after attention. This "everything else" would have been familiar to any machine learning engineer when *Attention is All You Need* was published, so it's worth taking time to familiarize ourselves with it.
 
-## The very beginning: word embedding
+## Background: word embeddings
 
 If there was ever to be any hope of computationally representing the semantics of human language, it was always going to be necessary to figure out how to represent human words, and the relationships between them, mathematically. It shouldn't be too surprising, considering this, that the machine learning community had come with ways to represent words, long before attention and transformers were introduced in 2017.
 
@@ -110,13 +110,11 @@ $$
 $$
 So, a properly trained embedding space will "know" that "one" is less plural than "two", which is less plural than "three", which is less plural than "four".
 
-### Embeddings in a transformer
+## The steps in a transformer
 
-The *embedding matrix* $\mathbf{W}_E$ is a matrix whose columns are all of the words in the dictionary
+### Before attention
 
-"Turning words into vectors was common practice in machine learning long before transformers, but it's a little weird if you've never seen it before, and it sets the foundation for everything that follows, so let's take a moment to get familiar with it"
-
-$$
+### The goal of attention: embeddings beyond words
 
 Consider the following input:
 
@@ -128,4 +126,8 @@ In this state of things, the embedding vectors just represent mere, simple words
 
 This is precisely what a transformer achieves. As embedding vectors progress through more and more transformer operations, they begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "King" not only corresponds to "male ruler of a nation", but also somehow points in a specific and nuanced direction that encodes "this is a king who lived in Scotland, who achieved his post after murdering the previous king, and who's being described in Shakespearian language".
 
-## The very end: unembedding
+### After attention
+
+The *embedding matrix* $\mathbf{W}_E$ is a matrix whose columns are all of the words in the dictionary
+
+"Turning words into vectors was common practice in machine learning long before transformers, but it's a little weird if you've never seen it before, and it sets the foundation for everything that follows, so let's take a moment to get familiar with it"
