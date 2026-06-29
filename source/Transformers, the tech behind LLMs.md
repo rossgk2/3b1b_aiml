@@ -94,7 +94,7 @@ There's even more semantics to be explored in the embedding space. This peculiar
 
 > There is an operation between two vectors $\mathbf{v}$ and $\mathbf{w}$ that is denoted by $\vv \cdot \ww$, that is read out loud as "v dot w", and is defined to be the result of multiplying the length of the projection (the "shadow") of $\mathbf{v}$ onto $\mathbf{w}$ by the length of $\mathbf{w}$. Notice that since the dot product of two vectors is a product of lengths, it is a number. When we have vectors $\mathbf{v} = \begin{pmatrix} v_1 \\\\ vdots \\\\ v_n \end{pmatrix}$ and $\mathbf{w} = \begin{pmatrix} w_1 \\\\ vdots \\\\ w_n \end{pmatrix}$, it is possible to prove that the dot product of $\mathbf{v}$ and $\mathbf{w}$ is equal to the result of multiplying corresponding components and summing them: $\vv \cdot \ww = v_1 w_1 + ... + v_n w_n$.
 
-For the full details, you can see [my book on linear algebra, tensors, and manifolds](https://github.com/rossgk2/Linear-algebra-tensors-manifolds). For our purposes, though, all that need be understood is that the dot product of two vectors is a tool we are fortunate to have, since it is both geometrically useful (as it measures a vector projection) and easy to compute (as all you have to do is multiply and sum vector components).
+For the full details, you can see [my book on linear algebra, tensors, and manifolds](https://github.com/rossgk2/Linear-algebra-tensors-manifolds). For our purposes, though, all that need be understood is that the dot product of two vectors is an easily computable measure of how much they align.
 
 Now we return to word embeddings. 
 
