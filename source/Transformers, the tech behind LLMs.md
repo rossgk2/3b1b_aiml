@@ -63,7 +63,7 @@ Specifically, it was already possible to have a word representation function tha
 
 [^2]: Google's Word2Vec, presented in the *Efficient Estimation of Word Representations in Vector Space*, was the first such library providing this functionality.
 
-Since a vector of $n$ numbers can interpreted to the coordinates of a point in $n$-dimensional space, we can think of a word representation function as mapping words to locations. And, if we conflate the words with their representations, pretending that a word *is* its representation, we might suggestively say that that a word representation function *embeds* words into that space; it takes the hazy, abstract notions of human words, and grounds them in the more tangible reality of lists of numbers, in such a way that relationships between the representations somehow mirror the relationships between the originals.
+Since a vector of $n$ numbers can interpreted to the coordinates of a point in $n$-dimensional space, we can think of a word representation function as mapping words to locations. And, if we conflate the words with their representations, pretending that a word *is* its representation, we might suggestively say that that a word representation function *embeds* words into that space; it takes the hazy, abstract notions of human words, and grounds them in the more tangible reality of lists of numbers.
 
 For these metaphorical reasons, we have the following terminology:
 
@@ -73,25 +73,20 @@ For these metaphorical reasons, we have the following terminology:
 
 ### Mirrored relationships
 
-It really is true that embeddings preserve the relationships between words. It's pretty awe-inspiring. For example, we might have the prior impression that the semantic difference between the words "woman" and "man" is about the same as the semantic difference between "queen" and "king":
+The exciting idea to represent words with vectors is only actually useful if the relationships between vectors somehow *mirror* the relationships[^3] between the corresponding words. For example, we might have the prior impression that the semantic difference between the words "woman" and "man" is about the same as the semantic difference between "queen" and "king".
 $$
 \text{woman} - \text{man} \approx \text{queen} - \text{king}
 $$
-In regular human language, there's no real way to quantify precisely in what sense in which this is true. But, if we have an embedding $E$ that maps words to vectors, then we can apply the embedding to both sides of the above to obtain
-$$
-E(\text{woman} - \text{man}) \approx E(\text{queen} - \text{king})
-$$
-So far, we've only used the embedding to rephrase the previous approximation we suspected. The key insight is that, if relationships are to mirrored, then representation of the difference must be the same as the difference of the representations[^3]. Thus the above is equivalent to
+[^3]: We want the embedding to be a vector space isomorphism between the space of words and the space of embedded vectors.
+
+Of course, it's not really clear how one is supposed to subtract "man" from "woman". However, if we could take the embedding vector of "man", we *could* subtract that from the embedding vector of "woman". And we could do the same for "queen" and "king". So, we might expect that we would have something like
 $$
 E(\text{woman}) - E(\text{man}) \approx E(\text{queen}) - E(\text{king})
 $$
 
+Marvelously, when we use an actual embedding library to check this, we find that it is indeed true.
 
-[^3]: It is easiest to see this when, for a representation function $E$ mapping words to vectors, we write $w \mapsto \mathbf{v}$ to indicate $E(w) =  \mathbf{v}$. With this notation, it is easy to see that representations mirror their originals only if $c_1 w_1 + c_2 w_2 \mapsto c_1 E(w_1) + c_2 E(w_2)$. (And *this* is just the idea behind a mathematical isomorphism.)
-
-Since this approximation only involves words, and not differences of words like $\text{woman} - \text{man}$, it can be put to the test with the embedding function $E$. 
-
-And, when we test it by using an embedding library, we do indeed find it holds.
+At this point, the obvious question is- how in the world was the machine learning community able to come up with embedding functions that have this mirroring property? The answer is *training*. The embedding function is secretly a neural network that takes words as input, produces vectors as output, and that has been trained to do this mapping in a way that ensures mirroring of relationships.
 
 ### Dot product semantics
 
