@@ -51,11 +51,9 @@ To begin understanding how a transformer produces the probability distribution t
 4. **(Feedforward).** That next "machine" is a neural network referred to as a *feedforward layer*. Output vectors from the attention operation are acted on in parallel, and independently of each other, by this feedforward layer, which is sometimes also called a *multilayer perceptron*, or *MLP*.
 5. **(Repeat).** The process repeats many times. The output vectors from the previous step are passed through more and more attention-block-feedforward-layer pairs.
 
-## Chapter layout
+The third step, *attention*, is the core idea at the heart of transformers. It was aptly featured in the title of the seminal 2017 Google research paper that introduced transformers, *Attention is All You Need*. 
 
-Attention is the core idea at the heart of transformers. It was aptly mentioned in the title of the seminal 2017 Google Brain research paper that introduced transformers, *Attention is All You Need*. All of the other pieces of the transformer function were well known to the machine learning community when transformers were introduced.
-
-Since attention is a relatively complicated mechanism, Grant saves the discussion of exactly how it works for the next video. The current video, and article, are dedicated to explaining everything else- what happens at the very beginning of the transformer, and what happens at the end, while covering the background knowledge that would have been second nature to any machine learning engineer when *Attention is All You Need* was published.
+Since attention is a relatively complicated mechanism, Grant saves the discussion of exactly how it works for the next video. The current video and article are dedicated to explaining everything else- what happens at the very beginning of the transformer, and what happens at the end. This "everything else" would have been second nature to any machine learning engineer when *Attention is All You Need* was published, so it's worth taking time to familiarize ourselves with it.
 
 ## The very beginning: word embedding
 
