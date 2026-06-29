@@ -55,6 +55,8 @@ The third step, *attention*, is the core idea at the heart of transformers. It w
 
 Since attention is a relatively complicated mechanism, Grant saves the discussion of exactly how it works for the next video. The current video and article are dedicated to explaining everything else- some background on word embeddings, what happens before attention, what the goal of attention is, and what happens after attention. This "everything else" would have been familiar to any machine learning engineer when *Attention is All You Need* was published, so it's worth taking time to familiarize ourselves with it.
 
+First, let's go over some background.
+
 ## Background: word embeddings
 
 If there was ever to be any hope of computationally representing the semantics of human language, it was always going to be necessary to figure out how to represent human words, and the relationships between them, mathematically. It shouldn't be too surprising, considering this, that the machine learning community had come with ways to represent words, long before attention and transformers were introduced in 2017.
@@ -73,12 +75,10 @@ For these metaphorical reasons, we have the following terminology:
 
 ### Mirrored relationships
 
-The exciting idea to represent words with vectors is only actually useful if the relationships between vectors somehow *mirror* the relationships[^3] between the corresponding words. For example, we might have the prior impression that the semantic difference between the words "woman" and "man" is about the same as the semantic difference between "queen" and "king".
+The exciting idea to represent words with vectors is only actually useful if the relationships between vectors somehow *mirror* the relationships between the corresponding words. For example, we might have the prior impression that the semantic difference between the words "woman" and "man" is about the same as the semantic difference between "queen" and "king".
 $$
 \text{woman} - \text{man} \approx \text{queen} - \text{king}
 $$
-[^3]: We want the embedding to be a vector space isomorphism between the space of words and the space of embedded vectors.
-
 Of course, it's not really clear how one is supposed to subtract "man" from "woman". However, if we could take the embedding vector of "man", we *could* subtract that from the embedding vector of "woman". And we could do the same for "queen" and "king". So, if $\mathbf{E}$ is the embedding function, we might expect that we would have something like
 $$
 \mathbf{E}(\text{woman}) - \mathbf{E}(\text{man}) \approx \mathbf{E}(\text{queen}) - \mathbf{E}(\text{king}).
@@ -112,11 +112,19 @@ So, a properly trained embedding space will "know" that "one" is less plural tha
 
 ## The steps in a transformer
 
-### Before attention: tokenization and embedding
+Now, we're ready to revisit the steps in a transformer in more depth. As mentioned before, we save the full explanation of the attention mechanism for the next article, and only outline what the goal of attention is for now. 
+
+### Before attenton: tokenization and embedding
+
+**(Tokenization).** First, the input is first broken up into a bunch of little pieces called *tokens*.
+
+**(Embedding).** Then, the embedding function, which is secretly a neural network trained to embed words in the desired way, is applied to each token to produce embedded vectors. Note: in the video, Grant conceptualizes the embedding function as a matrix with one column vector for every word in the dictionary.
 
 ### The goal of attention: embeddings beyond words
 
-Consider the following input:
+**(Attention, feedforward, repeat).** Then, the attention mechanism is applied, again and again. Strictly speaking, feedforward layers are also involved- but they are not the core new idea at play here, and are only "touching up", just slightly modifying, the results of each attention block. 
+
+To understand what the goal of these attention blocks are, consider the following input:
 
 > "The King doth wake tonight and takes his rouse"
 
@@ -124,7 +132,7 @@ We can associate each input word with an embedding vector so that, for instance,
 
 In this state of things, the embedding vectors just represent mere, simple words. But, precisely because they live in high-dimensional spaces, they have the *capacity* to soak in so much more context than this.
 
-This is precisely what a transformer achieves. As embedding vectors progress through more and more transformer operations, they begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "King" not only corresponds to "male ruler of a nation", but also somehow points in a specific and nuanced direction that encodes "this is a king who lived in Scotland, who achieved his post after murdering the previous king, and who's being described in Shakespearian language".
+And this is the goal of the attention mechanism. The goal is that, as embedding vectors progress through more and more attention blocks (and associated feedforward layers), they begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "King" not only corresponds to "male ruler of a nation", but also somehow points in a specific and nuanced direction that encodes "this is a king who lived in Scotland, who achieved his post after murdering the previous king, and who's being described in Shakespearian language".
 
 ### After attention: unembedding
 
