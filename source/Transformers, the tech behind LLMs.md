@@ -134,11 +134,11 @@ $$
 
 ### The goal of attention: embeddings beyond words
 
-**(Attention, feedforward, repeat).** Our matrix $\mathbf{X}$ of embedded vectors arrives at the attention step. Its first column vector, "Harry", points in whatever direction in the embedding space is associated with traditional British male names. 
+**(Attention, feedforward, repeat).** Our matrix $\mathbf{X}$ of embedded vectors arrives at the attention step. Its first column vector, "Harry", points in whatever direction in the embedding space is associated with traditional British names. 
 
 In other words, the first column vector, and all of the others, represent mere, simple words. But, precisely because they live in a high-dimensional space, they have the *capacity* to soak in so much more context than this.
 
-Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associated feedforward layers), the hope is that its column vectors begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "Harry" is not only points in the direction associated with traditional British male names, but also somehow in a more specific and nuanced direction that encodes "this Harry is the famous fictional character, and is likely being referred to in the beginning of a book".
+Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associated feedforward layers), the hope is that its column vectors begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "Harry" is not only points in the direction associated with traditional British names, but also somehow in a more specific and nuanced direction that encodes "this Harry is the famous fictional character, and is likely being referred to in the beginning of a book".
 
 ### After attention: unembedding
 
