@@ -104,7 +104,7 @@ We can formalize this idea with embeddings by defining a *plurality embedding* t
 $$
 \textbf{plur} := \mathbf{E}(\text{cats}) - \mathbf{E}(\text{cat}).
 $$
-Now, here is the magic. If we use the dot product to measure the projection of the embeddings of the English words "one", "two", "three", and "four" onto this plurality vector, we see that the measurements are increasing:
+Now, here is the magic. If we use the dot product to measure how much each of the embeddings of the English words "one", "two", "three", and "four" align with the plurality vector, we see that the measurements are increasing:
 $$
 \mathbf{E}(\text{one}) \cdot \textbf{plur} < \mathbf{E}(\text{two}) \cdot \textbf{plur} < \mathbf{E}(\text{three}) \cdot \textbf{plur} < \mathbf{E}(\text{four}) \cdot \textbf{plur}
 $$
