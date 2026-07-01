@@ -65,7 +65,7 @@ Specifically, it was already possible to have a word representation function tha
 
 [^2]: Google's Word2Vec, presented in the *Efficient Estimation of Word Representations in Vector Space*, was the first such library providing this functionality.
 
-Since a vector of $n$ numbers can interpreted to the coordinates of a point in $n$-dimensional space, we can think of a word representation function as mapping words to locations. And, if we conflate the words with their representations, pretending that a word *is* its representation, we might suggestively say that that a word representation function *embeds* words into that space; it takes the hazy, abstract notions of human words, and grounds them in the more tangible reality of lists of numbers.
+Since a vector of $n$ numbers can interpreted to the coordinates of a point in $n$-dimensional space, we can think of a word representation function as mapping words to locations, or equivalently, directions (since every location corresponds to the direction between it and the origin). And, if we conflate the words with their representations, pretending that a word *is* its representation, we might suggestively say that that a word representation function *embeds* words into that space; it takes the hazy, abstract notions of human words, and grounds them in the more tangible reality of lists of numbers.
 
 For these metaphorical reasons, we have the following terminology:
 
@@ -90,15 +90,15 @@ At this point, the obvious question is- how in the world was the machine learnin
 
 ### Dot product semantics
 
-There's even more semantics to be explored in the embedding space. This peculiarity, though, requires a bit of prior knowledge from linear algebra. So, here is a quick crash course:
+There's even more semantics to be explored in the embedding space. This peculiarity, though, requires a bit of prior knowledge from linear algebra. So, here is a quick crash-course:
 
-> There is an operation between two vectors $\mathbf{v}$ and $\mathbf{w}$ that is denoted by $\vv \cdot \ww$, that is read out loud as "v dot w", and is defined to be the result of multiplying the length of the projection (the "shadow") of $\mathbf{v}$ onto $\mathbf{w}$ by the length of $\mathbf{w}$. Notice that since the dot product of two vectors is a product of lengths, it is a number. When we have vectors $\mathbf{v} = \begin{pmatrix} v_1 \\\\ vdots \\\\ v_n \end{pmatrix}$ and $\mathbf{w} = \begin{pmatrix} w_1 \\\\ vdots \\\\ w_n \end{pmatrix}$, it is possible to prove that the dot product of $\mathbf{v}$ and $\mathbf{w}$ is equal to the result of multiplying corresponding components and summing them: $\vv \cdot \ww = v_1 w_1 + ... + v_n w_n$.
+> There is an operation between two vectors $\mathbf{v}$ and $\mathbf{w}$ that is denoted by $\vv \cdot \ww$, that is read out loud as "v dot w", and is defined to be the result of multiplying the length of the projection (the "shadow") of $\mathbf{v}$ onto $\mathbf{w}$ by the length of $\mathbf{w}$. Since the dot product of two vectors is a product of lengths, it is a number. When we have vectors $\mathbf{v} = \begin{pmatrix} v_1 \\\\ vdots \\\\ v_n \end{pmatrix}$ and $\mathbf{w} = \begin{pmatrix} w_1 \\\\ vdots \\\\ w_n \end{pmatrix}$, it is possible to prove that the dot product of $\mathbf{v}$ and $\mathbf{w}$ is equal to the result of multiplying corresponding components and summing them: $\vv \cdot \ww = v_1 w_1 + ... + v_n w_n$.
 
 For the full details, you can see [my book on linear algebra, tensors, and manifolds](https://github.com/rossgk2/Linear-algebra-tensors-manifolds). For our purposes, though, all that need be understood is that the dot product of two vectors is an easily computable measure of how much they align.
 
 Now we return to word embeddings. 
 
-You might imagine that if you take any plural version of a noun (like "cats") and then "subtract" the singular version ("cat") you will end up with the letter "s". Or, more fundamentally, you end up with the notion of plurality- after all, in English, we pluralize nouns by adding "s" to them.
+You might imagine that if you take any plural version of a noun (like "cats") and then "subtract" the singular version ("cat") you will end up with the letter "s". More fundamentally, you end up with the notion of plurality- after all, in English, we pluralize nouns by adding "s" to them.
 
 We can formalize this idea with embeddings by defining a *plurality embedding* to be a difference of any plural embedding (like "cats") and its corresponding singular embedding ("cat"):
 $$
@@ -114,35 +114,43 @@ So, a properly trained embedding space will "know" that "one" is less plural tha
 
 Now that we're ready to revisit the steps in a transformer in more depth, it'll help to have an example. Let's suppose a user types the following into a chatbot:
 
-> Harry Potter was a highly unusual
+> Harry Potter, the boy who
 
-We're expecting that the chatbot correctly predict the next word in the sentence, "boy". 
-
-Let's see how a transformer-based chatbot would handle this!
+We're expecting that the chatbot correctly predict the word that should follow this phrase, "lived". Let's see how a transformer-based chatbot would handle this!
 
 ### Before attention: tokenization and embedding
 
-**(Tokenization).** First, the input is first broken up into a bunch of little pieces called *tokens*. In our example, the tokens might be "Harry", "Potter", "was", "a", "highly", "unusual".
+**(Tokenization).** First, the input is first broken up into a bunch of little pieces called *tokens*. In our example, the tokens might be "Harry", "Potter,", "the", "boy", "who", "lived".
 
-**(Embedding).** Then, the embedding function, which is secretly a neural network trained to embed words in the desired way, is applied to each token to produce embedded vectors: $\mathbf{E}(\text{Harry})$, $\mathbf{E}(\text{Potter})$, $\mathbf{E}(\text{was})$, $\mathbf{E}(\text{a})$, $\mathbf{E}(\text{highly})$, $\mathbf{E}(\text{unusual})$. We can conceptualize the embedding function as a matrix with one column vector for every word in the dictionary. This matrix is called the *embedding matrix* and is denoted $\mathbf{W}_E$.
+**(Embedding).** We map the tokens to embedded vectors by using the *embedding matrix*, which has one column vector for every word in the dictionary. The embedding matrix is denoted by $\mathbf{W}_E$, and was learned during training in such a way that it ensures the semantic "mirroring" we discussed earlier.
 
 As we pass to the next step, it's convenient to conceptualize our list of embedded vectors as being the column vectors of a matrix $\mathbf{X}$,
 $$
-\mathbf{X} := \begin{pmatrix} | & | & | & | & | & | \\ \mathbf{E}(\text{Harry}) & \mathbf{E}(\text{Potter}) & \mathbf{E}(\text{was}) & \mathbf{E}(\text{a}) & \mathbf{E}(\text{highly}) & \mathbf{E}(\text{unusual}) \\ | & | & | & | & | & | \end{pmatrix}
+\mathbf{X} := \begin{pmatrix} | & | & | & | & | \\ \mathbf{E}(\text{Harry}) & \mathbf{E}(\text{Potter,}) & \mathbf{E}(\text{the}) & \mathbf{E}(\text{boy}) & \mathbf{E}(\text{who}) \\ | & | & | & | & | \end{pmatrix}
 $$
 
 
 ### The goal of attention: embeddings beyond words
 
-**(Attention, feedforward, repeat).** Our matrix $\mathbf{X}$ of embedded vectors arrives at the attention step. Its first column vector, "Harry", points in whatever direction in the embedding space is associated with traditional British names. 
+**(Attention, feedforward, repeat).** When our matrix $\mathbf{X}$ of embedded vectors arrives at the attention step, its first column vector, "Harry", points in whatever direction in the embedding space is associated with traditional British male names. In fact, *all* of the embedded vectors in the matrix represent mere, simple words. But, precisely because they reside in a high-dimensional space, they have the *capacity* to soak in so much more context than this.
 
-In other words, the first column vector, and all of the others, represent mere, simple words. But, precisely because they live in a high-dimensional space, they have the *capacity* to soak in so much more context than this.
-
-Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associated feedforward layers), the hope is that its column vectors begin to point in more and more specific and nuanced directions than they did originally, so that, by the end, the embedding for "Harry" is not only points in the direction associated with traditional British names, but also somehow in a more specific and nuanced direction that encodes "this Harry is the famous fictional character, and is likely being referred to in the beginning of a book".
+Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associated feedforward layers), the hope, and goal, is that its column vectors begin to point in more and more specific and nuanced directions than they did originally. The hope is that by the end, the embedding for "Harry" not only points in the direction associated with traditional British male names, but also somehow in a more specific and nuanced direction that encodes "this Harry is the globally famous fictional character, who, in his story, is an orphan, a wizard, and famous, even though all he ever wanted was a normal life with a loving family".
 
 ### After attention: unembedding
 
-**(Unembedding). **After the 
+**(Unembedding). **After our matrix **X** comes out of the attention block, its last column vector, being a highly-contextualized version of the last word in the input phrase, points in a direction that indicates it is strongly semantically related to whatever the next word should be. The only thing that needs to be done at this point, then, is to extract that information somehow[^3].
+
+[^3]: It might seem strange that we *only* use information from the last vector to make our next-word prediction. All of the other vectors are just sitting there, holding lots of context-rich meaning! Grant tells us that one reason the other vectors are present is because they happen to be useful for training. Another, more fundamental reason, is that the last vector is only able to attain the rich contextual meaning it does if, during the attention mechanism, the contextual meanings of the other vectors are present to influence it
+
+This is where the unembedding step comes in. Much like how we have a learned embedding matrix that maps words to embedded vectors, we also have a learned unembedding matrix that is used to map embedded vectors back to words[^4].
+
+[^4]: Note, the unembedding matrix is *not* the inverse of the embedding matrix! If it were, that would destroy all of the contextual meaning the vectors soaked up in the attention mechanism. 
+
+An
+
+So, why did we operate on all of the columns 
+
+The last column 
 
 $\mathbf{W}_U$; has dimensions equal to that of the transpose of the embedding matrix
 

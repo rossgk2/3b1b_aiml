@@ -1,0 +1,4 @@
+# Questions
+
+* How is it possible to training the embedding function simultaneously with rest of the LLM parameters and still get a good result? Why is this even a good idea? I would think that it would be a good idea to just use a pre-existing embedding function.
+* In the example of using attention to refine noun embeddings in accordance to the embeddings of the adjectives that modify them, why does it make sense for the query and key vectors to be comparable? It's clear how a query vector might represent the question that this particular word in this particular position of a sentence is preceded by an adjective, and it's clear how a key vector might represent the question that this particular word in this particular position of a sentence is an adjective with so and so meaning, but it's not clear why a query vector should align more with a key vector when they are meant to be associated together.
