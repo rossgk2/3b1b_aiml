@@ -138,21 +138,54 @@ Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associa
 
 ### After attention: unembedding
 
-**(Unembedding). **After our matrix **X** comes out of the attention block, its last column vector, being a highly-contextualized version of the last word in the input phrase, points in a direction that indicates it is strongly semantically related to whatever the next word should be. The only thing that needs to be done at this point, then, is to extract that information somehow[^3].
+**(Unembedding). **After our matrix $\mathbf{X}$ comes out of the attention block, its last column vector ($\mathbf{E}(\text{who})$, in our case), being a highly-contextualized version of the last word in the input phrase, points in a direction that indicates it is strongly semantically related to whatever the next word should be. The only thing that needs to be done at this point, then, is to extract that information somehow[^3].
 
 [^3]: It might seem strange that we *only* use information from the last vector to make our next-word prediction. All of the other vectors are just sitting there, holding lots of context-rich meaning! Grant tells us that one reason the other vectors are present is because they happen to be useful for training. Another, more fundamental reason, is that the last vector is only able to attain the rich contextual meaning it does if, during the attention mechanism, the contextual meanings of the other vectors are present to influence it
 
-This is where the unembedding step comes in. Much like how we have a learned embedding matrix that maps words to embedded vectors, we also have a learned unembedding matrix that is used to map embedded vectors back to words[^4].
+This is where the unembedding step comes in. Much like how we have a learned embedding matrix $\mathbf{W}\_E$ that maps words to embedded vectors *that don't have much context*, we also have a learned unembedding matrix $\mathbf{W}\_U$ that is used to map embedded vectors *that have lots of context* to probability distributions.
 
 [^4]: Note, the unembedding matrix is *not* the inverse of the embedding matrix! If it were, that would destroy all of the contextual meaning the vectors soaked up in the attention mechanism. 
 
-An
+In the video, Grant presents the unembedding matrix to be matrix whose *rows* are high-context words. I actually think using rows here instead of columns makes things less clear. In my view, it's cleaner to imagine the unembedding matrix to be very similar to the embedding matrix, so that we have the following summary:
 
-So, why did we operate on all of the columns 
+* The embedding matrix $\mathbf{W}\_E$ is a learned matrix that has one low-context embedded column vector for every word in the dictionary. (And this matrix was trained so as to ensure the mapping of words to low-context embedded vectors it induces has the desired mirroring.)
+* The unembedding matrix $\mathbf{W}\_U$ is a learned matrix that has one word for each one of its one high-context embedded column vectors. (And this matrix was trained so as to ensure that its high-context embedded vectors are representative.)
 
-The last column 
+Whatever convention you use, the important thing to understand is how each of these matrices is used. We saw earlier that the embedding matrix is used as a lookup table. Now, how might the unembedding matrix be used? Well, its job is to take the last high-context vector from our matrix $\mathbf{X}$, which is $\mathbf{E}(\text{who})$ in our case, and generate a probability distribution from it.
 
-$\mathbf{W}_U$; has dimensions equal to that of the transpose of the embedding matrix
+Remember how the dot product measures how closely aligned two vectors are? This makes the solution clear. To measure how much $\mathbf{x}\_{\text{last}}$ aligns with each possible high-context word, compute the dot product of $\mathbf{x}_{\text{last}}$ with each column of $\mathbf{W}\_U$, and label that dot product by the word corresponding to that column of $\mathbf{W}\_U$:
+$$
+\begin{pmatrix}
+	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_1 & | & \text{livable}  \\
+	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_1 & | & \text{lived}  \\
+	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_1 & | & \text{living}  \\
+	\vdots & | & \vdots \\
+	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_i & | & \text{saved} \\
+	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_j & | & \text{saves} \\
+	\textbf{E}(\text{who}) \cdot (\mathbf{W}_U)_k & | & \text{savor} \\
+	\vdots & | & \vdots \\
+    \mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_{N - 2} & | & \text{zymogen} \\
+    \mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_{N - 1} & | & \text{zymosis} \\
+    \mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_{N} & | & \text{ZZZ}
+\end{pmatrix}, \text{ where $N$ is the length of the dictionary}
+=
+\begin{pmatrix}
+	0.00 & | & \text{livable} \\
+	0.78 & | & \text{lived} \\
+	0.00 & | & \text{living} \\
+	\vdots & | & \vdots \\
+	0.16 & | & \text{saved} \\
+	0.06 & | & \text{saves} \\
+	0.00 & | & \text{savor} \\
+	\vdots & | & \vdots \\
+	0.00 & | & \text{zymogen} \\
+	0.00 & | & \text{zymosis} \\
+	0.00 & | & \text{ZZZ} \\
+\end{pmatrix}
+$$
+
+
+
 
 ### Softmax
 
