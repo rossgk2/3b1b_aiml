@@ -161,19 +161,19 @@ $$
 \end{pmatrix}
 =
 \begin{pmatrix}
-    -1.00 & | & \text{aah} \\
-    -1.00 & | & \text{aardvark} \\
-    -1.00 & | & \text{aardwolf} \\
-    -1.00 & | & \text{aargh} \\
-    \vdots \\
-    5.19 & | & \text{lived} \\
-    -1.00 & | & \text{liver} \\
-    2.62 & | & \text{living} \\
-    \vdots \\
-    -1.00 & | & \text{zyme} \\
-    -1.00 & | & \text{zymogen} \\
-    -1.00 & | & \text{zymosis} \\
-    -1.00 & | & \text{zzz}
+    -1.500 & | & \text{aah} \\
+    -1.500 & | & \text{aardvark} \\
+    -1.500 & | & \text{aardwolf} \\
+    -1.500 & | & \text{aargh} \\
+    \vdots &   & \vdots \\
+     3.344 & | & \text{lived} \\
+    -1.500 & | & \text{liver} \\
+     1.760 & | & \text{lives} \\
+    \vdots &   & \vdots \\
+    -1.500 & | & \text{zyme} \\
+    -1.500 & | & \text{zymogen} \\
+    -1.500 & | & \text{zymosis} \\
+    -1.500 & | & \text{zzz}
 \end{pmatrix}
 $$
 
@@ -200,26 +200,77 @@ $$
 $$
 This matrix is called the *unembedding matrix*, and it is denoted $\mathbf{W}_U$. Like the embedding matrix, it is learned from training.
 
-You might be wondering- why can't we just use the columns of the embedding matrix as the rows of the unembedding matrix? Don't both sets of vectors represent the set of all possible words? Well, yes. And some models indeed do this. But it's a common enough choice to maintain entirely separate matrices for embedding and unembedding
+You might be wondering- why can't we just use the columns of the embedding matrix as the rows of the unembedding matrix? Don't both sets of vectors represent the set of all possible words? Well, yes. And some models indeed do this. But it's a common enough choice to maintain entirely separate matrices for embedding and unembedding. The difference between *representing* a word and *predicting* the next word is enough that doing so can lead to substantial model improvement.
 
 ### Softmax
 
-**(Unembedding, continued).** We almost have the probability distribution we want! Already, more positive values seem to be correlating with words that should have a higher chance of being predicted, and more negative values seem to to be correlating with words that should have a lower chance of being predicted.
+**(Unembedding, continued).** Back to our vector of dot products:
+$$
+\begin{pmatrix}
+    -1.500 & | & \text{aah} \\
+    -1.500 & | & \text{aardvark} \\
+    -1.500 & | & \text{aardwolf} \\
+    -1.500 & | & \text{aargh} \\
+    \vdots &   & \vdots \\
+     3.344 & | & \text{lived} \\
+    -1.500 & | & \text{liver} \\
+     1.760 & | & \text{lives} \\
+    \vdots &   & \vdots \\
+    -1.500 & | & \text{zyme} \\
+    -1.500 & | & \text{zymogen} \\
+    -1.500 & | & \text{zymosis} \\
+    -1.500 & | & \text{zzz}
+\end{pmatrix}
+$$
+We almost have the probability distribution we want! Already, more positive values seem to be correlating with words that should have a higher chance of being predicted, and more negative values seem to to be correlating with words that should have a lower chance of being predicted.
 
-Except, we can't really rightfully refer to the numbers in our distribution as "probabilities", because some of them are negative, which probabilities can't be (there is no notion of a "negative chance" of an event happening), and they don't add up to 1.0 (which probabilities must, since *some* event is guaranteed to happen).
+Except, we can't really rightfully refer to the numbers in our distribution as "probabilities", because some of them are negative, which probabilities can't be (there is no notion of a "negative chance" of an event happening), and they don't add up to 1.0 (which probabilities must, since *some* event is guaranteed to happen). Instead, people in the machine learning community call these psuedo-probability sort of numbers by the name "logits".
 
+Fortunately, there is a standard solution for computing logits to probabilities, called the softmax function. The softmax of a vector is pretty simple. Apply the function $x \mapsto e^x$ to each entry, and then divide each result by the sum of the exponentiated entries:
+$$
+\text{softmax} \left( \begin{pmatrix} x_1 \\ \vdots \\ x_n \end{pmatrix} \right)
+= 
+\begin{pmatrix} e^{x_1}/\sum_{i = 1}^n e^{x_i} \\ \vdots \\ e^{x_n}/\sum_{i = 1}^n e^{x_i} \end{pmatrix}
+$$
+We can deduce from the properties of exponents that this softmax function sends the largest logits close to 1 and the smallest logits close to 0, as desired.
 
+Applying softmax to our logit distribution from before, we obtain
+$$
+\text{softmax}\left(\begin{pmatrix}
+    -1.500 & | & \text{aah} \\
+    -1.500 & | & \text{aardvark} \\
+    -1.500 & | & \text{aardwolf} \\
+    -1.500 & | & \text{aargh} \\
+    \vdots &   & \vdots \\
+     3.344 & | & \text{lived} \\
+    -1.500 & | & \text{liver} \\
+     1.760 & | & \text{lives} \\
+    \vdots &   & \vdots \\
+    -1.500 & | & \text{zyme} \\
+    -1.500 & | & \text{zymogen} \\
+    -1.500 & | & \text{zymosis} \\
+    -1.500 & | & \text{zzz}
+\end{pmatrix}\right)
+=
+\begin{pmatrix}
+    0.00 & | & \text{aah} \\
+    0.00 & | & \text{aardvark} \\
+    0.00 & | & \text{aardwolf} \\
+    0.00 & | & \text{aargh} \\
+    \vdots \\
+    0.78 & | & \text{lived} \\
+    .00 & | & \text{liver} \\
+    0.16 & | & \text{lives} \\
+    \vdots \\
+    0.00 & | & \text{zyme} \\
+    0.00 & | & \text{zymogen} \\
+    0.00 & | & \text{zymosis} \\
+    0.00 & | & \text{zzz}
+\end{pmatrix}
+$$
 
-The most obvious way to accomplish this is to use the columns of the embedding matrix as the set of all possible words. However- and this is not given much attention in the 3Blue1Brown video- this is not always the way it's done! In ChatGPT, at least, the representations of "all possible words" used for generating probability distributions (unembedding) are trained separately from the representations of "all possible words" that are used for embedding.
+At last, we have our probability distribution.
 
----
+### Extra: softmax with temperature
 
-
-
-The outputs that you get by default can be anything in the range $(-\infty, \infty)$
-
-Softmax is the standard way to turn an arbitrary list of numbers into a valid distribution in such a way that the largest values end up closest to 1, and the smaller values end up very close to 0
-
-When you add a "temperature" parameter to softmax, more weight is given to the lower values
-
-inputs to softmax are known as "logits"
+Today's chatbot models often expose a parameter called *temperature* that you can play around with. Interestingly, this parameter has to do with softmax. 
