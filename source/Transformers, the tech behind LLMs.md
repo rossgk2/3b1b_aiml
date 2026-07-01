@@ -273,4 +273,14 @@ At last, we have our probability distribution.
 
 ### Extra: softmax with temperature
 
-Today's chatbot models often expose a parameter called *temperature* that you can play around with. Interestingly, this parameter has to do with softmax. 
+In some situations, we can make room for a little bit of extra fun by, as Grant puts it, adding a little bit of "spice" to the softmax function. The "spice" is just a nonnegative number $T$ that we use to divide the exponents in expression for the softmax function: 
+$$
+\text{softmax} \left( \begin{pmatrix} x_1 \\ \vdots \\ x_n \end{pmatrix} \right)
+= 
+\begin{pmatrix} e^{x_1/T}/\sum_{i = 1}^n e^{x_i/T} \\ \vdots \\ e^{x_n/T}/\sum_{i = 1}^n e^{x_i/T} \end{pmatrix}
+$$
+Since this parameter plays a similar role as temperature does in thermodynamics equations from physics, it is referred to as the *temperature*.
+
+Anyhow, as $T$ goes to zero, the probability corresponding to the largest logit becomes closer and closer to 1, while all of the other probabilities go to zero. $T = 0$ therefore gives a very predictable, perhaps even trite, chatbot.
+
+If we make $T$ larger, the smallest probabilities in the distribution produced by softmax are, while still the smallest, more sizable. This results in more unconventional chatbots that say more unpredictable things. In the video, Grant shows how using $T = 5$ makes a chatbot ramble incoherently.
