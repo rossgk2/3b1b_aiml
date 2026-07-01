@@ -142,52 +142,79 @@ Thus, as $\mathbf{X}$ passes through more and more attention blocks (and associa
 
 [^3]: It might seem strange that we *only* use information from the last vector to make our next-word prediction. All of the other vectors are just sitting there, holding lots of context-rich meaning! Grant tells us that one reason the other vectors are present is because they happen to be useful for training. Another, more fundamental reason, is that the last vector is only able to attain the rich contextual meaning it does if, during the attention mechanism, the contextual meanings of the other vectors are present to influence it
 
-This is where the unembedding step comes in. Much like how we have a learned embedding matrix $\mathbf{W}\_E$ that maps words to embedded vectors *that don't have much context*, we also have a learned unembedding matrix $\mathbf{W}\_U$ that is used to map embedded vectors *that have lots of context* to probability distributions.
-
-[^4]: Note, the unembedding matrix is *not* the inverse of the embedding matrix! If it were, that would destroy all of the contextual meaning the vectors soaked up in the attention mechanism. 
-
-In the video, Grant presents the unembedding matrix to be matrix whose *rows* are high-context words. I actually think using rows here instead of columns makes things less clear. In my view, it's cleaner to imagine the unembedding matrix to be very similar to the embedding matrix, so that we have the following summary:
-
-* The embedding matrix $\mathbf{W}\_E$ is a learned matrix that has one low-context embedded column vector for every word in the dictionary. (And this matrix was trained so as to ensure the mapping of words to low-context embedded vectors it induces has the desired mirroring.)
-* The unembedding matrix $\mathbf{W}\_U$ is a learned matrix that has one word for each one of its one high-context embedded column vectors. (And this matrix was trained so as to ensure that its high-context embedded vectors are representative.)
-
-Whatever convention you use, the important thing to understand is how each of these matrices is used. We saw earlier that the embedding matrix is used as a lookup table. Now, how might the unembedding matrix be used? Well, its job is to take the last high-context vector from our matrix $\mathbf{X}$, which is $\mathbf{E}(\text{who})$ in our case, and generate a probability distribution from it.
-
-Remember how the dot product measures how closely aligned two vectors are? This makes the solution clear. To measure how much $\mathbf{x}\_{\text{last}}$ aligns with each possible high-context word, compute the dot product of $\mathbf{x}_{\text{last}}$ with each column of $\mathbf{W}\_U$, and label that dot product by the word corresponding to that column of $\mathbf{W}\_U$:
+What we do is take this last vector, $\mathbf{E}(\text{who})$, and compute how much it aligns with a embedding of every possible word. Of course, to compute how much two vectors align, we take their dot product. So, we will need to take the dot product of the last vector, $\mathbf{E}(\text{who})$, with the embedding for each possible word. Doing so gives us a column vector of dot products, which we can label by the embedding being compared against:
 $$
 \begin{pmatrix}
-	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_1 & | & \text{livable}  \\
-	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_1 & | & \text{lived}  \\
-	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_1 & | & \text{living}  \\
-	\vdots & | & \vdots \\
-	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_i & | & \text{saved} \\
-	\mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_j & | & \text{saves} \\
-	\textbf{E}(\text{who}) \cdot (\mathbf{W}_U)_k & | & \text{savor} \\
-	\vdots & | & \vdots \\
-    \mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_{N - 2} & | & \text{zymogen} \\
-    \mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_{N - 1} & | & \text{zymosis} \\
-    \mathbf{E}(\text{who}) \cdot (\mathbf{W}_U)_{N} & | & \text{ZZZ}
-\end{pmatrix}, \text{ where $N$ is the length of the dictionary}
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``aah''}) & | & \text{aah} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``aardvark''}) & | & \text{aardvark} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``aardwolf''}) & | & \text{aardwolf} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``aargh''}) & | & \text{aargh} \\
+	\vdots \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``lived''}) & | & \text{lived} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``liver''}) & | & \text{liver} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``living''}) & | & \text{living} \\
+	\vdots \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``zyme''}) & | & \text{zyme} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``zymogen''}) & | & \text{zymogen} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``zymosis''}) & | & \text{zymosis} \\
+	\mathbf{E}(\text{who}) \cdot (\text{an embedding of ``zzz''}) & | & \text{zzz}
+\end{pmatrix}
 =
 \begin{pmatrix}
-	0.00 & | & \text{livable} \\
-	0.78 & | & \text{lived} \\
-	0.00 & | & \text{living} \\
-	\vdots & | & \vdots \\
-	0.16 & | & \text{saved} \\
-	0.06 & | & \text{saves} \\
-	0.00 & | & \text{savor} \\
-	\vdots & | & \vdots \\
-	0.00 & | & \text{zymogen} \\
-	0.00 & | & \text{zymosis} \\
-	0.00 & | & \text{ZZZ} \\
+    -1.00 & | & \text{aah} \\
+    -1.00 & | & \text{aardvark} \\
+    -1.00 & | & \text{aardwolf} \\
+    -1.00 & | & \text{aargh} \\
+    \vdots \\
+    5.19 & | & \text{lived} \\
+    -1.00 & | & \text{liver} \\
+    2.62 & | & \text{living} \\
+    \vdots \\
+    -1.00 & | & \text{zyme} \\
+    -1.00 & | & \text{zymogen} \\
+    -1.00 & | & \text{zymosis} \\
+    -1.00 & | & \text{zzz}
 \end{pmatrix}
 $$
 
+### The unembedding matrix
 
+**(Unembedding, continued).** One convenient way of computing the above vector of dot products is by taking the matrix whose rows are the possible words, and multiplying it by the column vector $\mathbf{E}(\text{who})$:
+$$
+\begin{pmatrix}
+	\text{an embedding of ``aah''} \\
+	\text{an embedding of ``aardvark''} \\
+	\text{an embedding of ``aardwolf''} \\
+	\text{an embedding of ``aargh''} \\
+	\vdots \\
+	\text{an embedding of ``lived''} \\
+	\text{an embedding of ``liver''} \\
+	\text{an embedding of ``living''} \\
+	\vdots \\
+	\text{an embedding of ``zyme''} \\
+	\text{an embedding of ``zymogen''} \\
+	\text{an embedding of ``zymosis''} \\
+	\text{an embedding of ``zzz''}
+\end{pmatrix}
+\mathbf{E}(\text{who})
+$$
+This matrix is called the *unembedding matrix*, and it is denoted $\mathbf{W}_U$. Like the embedding matrix, it is learned from training.
 
+You might be wondering- why can't we just use the columns of the embedding matrix as the rows of the unembedding matrix? Don't both sets of vectors represent the set of all possible words? Well, yes. And some models indeed do this. But it's a common enough choice to maintain entirely separate matrices for embedding and unembedding
 
 ### Softmax
+
+**(Unembedding, continued).** We almost have the probability distribution we want! Already, more positive values seem to be correlating with words that should have a higher chance of being predicted, and more negative values seem to to be correlating with words that should have a lower chance of being predicted.
+
+Except, we can't really rightfully refer to the numbers in our distribution as "probabilities", because some of them are negative, which probabilities can't be (there is no notion of a "negative chance" of an event happening), and they don't add up to 1.0 (which probabilities must, since *some* event is guaranteed to happen).
+
+
+
+The most obvious way to accomplish this is to use the columns of the embedding matrix as the set of all possible words. However- and this is not given much attention in the 3Blue1Brown video- this is not always the way it's done! In ChatGPT, at least, the representations of "all possible words" used for generating probability distributions (unembedding) are trained separately from the representations of "all possible words" that are used for embedding.
+
+---
+
+
 
 The outputs that you get by default can be anything in the range $(-\infty, \infty)$
 
