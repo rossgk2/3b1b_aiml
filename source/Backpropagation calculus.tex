@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{geometry}
+
 \geometry
 {
 	a4paper,
@@ -161,18 +162,27 @@
 	
 	The backpropagation equations we've derived are practical in that they allow us to compute the gradient $\nabla c_i$, but their presentation can still be much improved by encapsulating the expressions that look very different across different layers into a single variable.
 	
-	The variable that achieves what we want is $\delta^{(\ell)}_j := \frac{\partial c_i}{\partial z^{(\ell)}_j}$. With this definition, the backpropagation equations become\footnote{It is necessary to multiply both sides of the third layer $\ell$ equation by $\frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} = \sigma'(z^{(\ell)}_j)$, and use the definition $\delta^{(\ell)}_j := \frac{\partial c_i}{\partial z^{(\ell)}_j} = \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j}$.}:
+	The variable that achieves what we want is 
+
+	\begin{align*}
+		\delta^{(\ell)}_j := 
+		\begin{cases}
+			\frac{\partial c_i}{\partial a^{(\ell)}_j} \sigma'(z^{(\ell)}_j) & \ell < L \\
+			2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j) & \ell = L
+		\end{cases},
+		\text{ where }
+		\frac{\partial c_i}{\partial a^{(\ell)}_j} = \left( \sum_{r = 1}^{n_{\ell+1}} \delta^{(\ell + 1)}_r w^{(\ell + 1)}_{jr} \right)
+	\end{align*}
+
+	With this definition, the backpropagation equations become
 	
 	\begin{align*}
 		&\frac{\partial c_i}{\partial w^{(\ell)}_{kj}} = \delta^{(\ell)}_j a^{(\ell - 1)}_k, \\
-		&\frac{\partial c_i}{\partial b^{(\ell)}_j} = \delta^{(\ell)}_j, \\
-		&\text{where } \delta^{(\ell)}_j =
-		\begin{cases}
-			2(a^{(L)}_j - y_{ij}) \sigma'(z^{(L)}_j) & \ell = L \\
-			\left( \sum_{r = 1}^{n_{\ell+1}} \delta^{(\ell + 1)}_r w^{(\ell + 1)}_{jr} \right) \sigma'(z^{(\ell)}_j) & \ell < L
-		\end{cases}.
+		&\frac{\partial c_i}{\partial b^{(\ell)}_j} = \delta^{(\ell)}_j.
 	\end{align*}
 	
+	Looking back through the derivation at the second equation for layer $\ell$, we can notice that $\frac{\partial c_i}{\partial a^{(\ell)}_j} \sigma'(z^{(\ell)}_j) = \frac{\partial c_i}{\partial z^{(\ell)}_j}$. Thus, one nice way of expressing $\delta^{(\ell)}_j$ is as $\delta^{(\ell)}_j = \frac{\partial c_i}{\partial z^{(\ell)}_j}$.
+
 	\subsection*{Interpretation of $\delta^{(\ell)}_j$}
 	
 	In the literature, the variable $\delta^{(\ell)}_j := \frac{\partial c_i}{\partial z^{(\ell)}_j}$ is referred to as the ``error''.
