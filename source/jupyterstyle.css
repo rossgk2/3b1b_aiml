@@ -1,17 +1,18 @@
 @import url("lwarp.css") ;
 
-body {
+html body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont,
         'Segoe UI', Helvetica, Arial, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
     background: #ffffff ;
     color: rgba(0, 0, 0, 0.87) ;
     font-size: 14px ;
-    line-height: 1.7 ;
+    line-height: 1.6 ;
 }
 
 p {
-    margin: 1em 0 ;
+    margin: 0 ;
+    margin-bottom: 1em ;
 }
 
 A:link { color: #0d47a1 ; }
@@ -31,8 +32,8 @@ h1, h2, h3, h4, h5, h6 {
 h1 { font-size: 29px ; }
 h2 { font-size: 24px ; }
 h3 { font-size: 20px ; }
-h4 { font-size: 27px ; }
-h5 { font-size: 23px ; }
+h4 { font-size: 29px ; }
+h5 { font-size: 24px ; }
 h6 { font-size: 20px ; }
 
 ul, ol {
