@@ -1,5 +1,21 @@
 \documentclass{article}
 
+\usepackage{iftex}
+
+\ifPDFTeX
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\else
+\usepackage{fontspec}
+\fi
+
+\usepackage[
+	HomeHTMLFilename=index,
+	HTMLFilename={node-},
+	mathjax,
+]{lwarp}
+
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{hyperref}
