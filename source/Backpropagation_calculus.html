@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<meta name="generator" content="LaTeX Lwarp package" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Backpropagation_calculus</title>
+<link rel="stylesheet" type="text/css" href="jupyterstyle.css" />
+
+<script>
+// Lwarp MathJax emulation code
+//
+// Based on code by Davide P. Cervone.
+// Equation numbering: https://github.com/mathjax/MathJax/issues/2427
+// Starred and ifnextchar macros: https://github.com/mathjax/MathJax/issues/2428
+// \left, \right delimiters: https://github.com/mathjax/MathJax/issues/2535
+//
+// Modified by Brian Dunn to adjust equation numbering and add subequations.
+//
+// LaTeX can use \seteqnumber{subequations?}{section}{number} before each equation.
+// subequations? is 0 usually, 1 if inside subequations.
+// section is a string printed as-is, or empty.
+// number is auto-incremented by MathJax between equations.
+//
+MathJax = {
+  subequations: "0",
+  section: "",
+  loader: {
+    load: ['[tex]/tagformat', '[tex]/textmacros'],
+  },
+  startup: {
+    ready() {
+      // These would be replaced by import commands if you wanted to make
+      // a proper extension.
+      const Configuration = MathJax._.input.tex.Configuration.Configuration;
+      const CommandMap = MathJax._.input.tex.SymbolMap.CommandMap;
+      const Macro = MathJax._.input.tex.Symbol.Macro;
+      const TexError = MathJax._.input.tex.TexError.default;
+      const ParseUtil = MathJax._.input.tex.ParseUtil.default;
+      const expandable = MathJax._.util.Options.expandable;
+
+        // Insert the replacement string into the TeX string, and check
+        // that there haven't been too many maxro substitutions (prevents
+        // infinite loops).
+        const useArgument = (parser, text) => {
+          parser.string = ParseUtil.addArgs(parser, text, parser.string.slice(parser.i));
+          parser.i = 0;
+          if (++parser.macroCount > parser.configuration.options.maxMacros) {
+            throw new TexError('MaxMacroSub1',
+            'MathJax maximum macro substitution count exceeded; ' +
+            'is there a recursive macro call?');
+          }
+        }
+
+        // Create the command map for:
+        //     \ifstar, \ifnextchar, \ifblank, \ifstrequal, \gsub, \seteqnumber
+        new CommandMap('Lwarp-macros', {
+          ifstar: 'IfstarFunction',
+          ifnextchar: 'IfnextcharFunction',
+          ifblank: 'IfblankFunction',
+          ifstrequal: 'IfstrequalFunction',
+          gsubstitute: 'GsubstituteFunction',
+          seteqnumber: 'SeteqnumberFunction'
+        }, {
+          // This function implements an ifstar macro.
+          IfstarFunction(parser, name) {
+             const resultstar = parser.GetArgument(name);
+             const resultnostar = parser.GetArgument(name);
+             const star = parser.GetStar();                 // true if there is a *
+             useArgument(parser, star ? resultstar : resultnostar);
+          },
+
+          // This function implements an ifnextchar macro.
+          IfnextcharFunction(parser, name) {
+            let whichchar = parser.GetArgument(name);
+            if (whichchar.match(/^(?:0x[0-9A-F]+|[0-9]+)$/i)) {
+              // $ syntax highlighting
+              whichchar = String.fromCodePoint(parseInt(whichchar));
+            }
+            const resultnextchar = parser.GetArgument(name);
+            const resultnotnextchar = parser.GetArgument(name);
+            const gotchar = (parser.GetNext() === whichchar);
+            useArgument(parser, gotchar ? resultnextchar : resultnotnextchar);
+          },
+
+          // This function implements an ifblank macro.
+          IfblankFunction(parser, name) {
+            const blankarg = parser.GetArgument(name);
+            const resultblank = parser.GetArgument(name);
+            const resultnotblank = parser.GetArgument(name);
+            const isblank = (blankarg.trim() == "");
+            useArgument(parser, isblank ? resultblank : resultnotblank);
+          },
+
+          // This function implements an ifstrequal macro.
+          IfstrequalFunction(parser, name) {
+            const strequalfirst = parser.GetArgument(name);
+            const strequalsecond = parser.GetArgument(name);
+            const resultequal = parser.GetArgument(name);
+            const resultnotequal = parser.GetArgument(name);
+            const isequal = (strequalfirst == strequalsecond);
+            useArgument(parser, isequal ? resultequal : resultnotequal);
+          },
+
+          // This function implements a gsub macro.
+          GsubstituteFunction(parser, name) {
+            const gsubfirst = parser.GetArgument(name);
+            const gsubsecond = parser.GetArgument(name);
+            const gsubthird = parser.GetArgument(name);
+            let gsubresult=gsubfirst.replace(gsubsecond, gsubthird);
+            useArgument(parser, gsubresult);
+          },
+
+          // This function modifies the equation numbers.
+          SeteqnumberFunction(parser, name) {
+              // Get the macro parameters
+              const star = parser.GetStar();                  // true if there is a *
+              const optBrackets = parser.GetBrackets(name);   // contents of optional brackets
+              const newsubequations = parser.GetArgument(name); // the subequations argument
+              const neweqsection = parser.GetArgument(name); // the eq section argument
+              const neweqnumber = parser.GetArgument(name);   // the eq number argument
+              MathJax.config.subequations=newsubequations ;   // a string with boolean meaning
+              MathJax.config.section=neweqsection ;           // a string with numeric meaning
+              parser.tags.counter = parser.tags.allCounter = neweqnumber ;
+          }
+
+        });
+
+        // Create the Lwarp-macros package
+        Configuration.create('Lwarp-macros', {
+          handler: {macro: ['Lwarp-macros']}
+        });
+
+        MathJax.startup.defaultReady();
+
+        // For forward references:
+        MathJax.startup.input[0].preFilters.add(({math}) => {
+          if (math.inputData.recompile){
+              MathJax.config.subequations = math.inputData.recompile.subequations;
+              MathJax.config.section = math.inputData.recompile.section;
+          }
+        });
+        MathJax.startup.input[0].postFilters.add(({math}) => {
+          if (math.inputData.recompile){
+              math.inputData.recompile.subequations = MathJax.config.subequations;
+              math.inputData.recompile.section = MathJax.config.section;
+          }
+        });
+
+          // For \left, \right with unicode-math:
+          const {DelimiterMap} = MathJax._.input.tex.SymbolMap;
+          const {Symbol} = MathJax._.input.tex.Symbol;
+          const {MapHandler} = MathJax._.input.tex.MapHandler;
+          const delimiter = MapHandler.getMap('delimiter');
+          delimiter.add('\\lBrack', new Symbol('\\lBrack', '\u27E6'));
+          delimiter.add('\\rBrack', new Symbol('\\rBrack', '\u27E7'));
+          delimiter.add('\\lAngle', new Symbol('\\lAngle', '\u27EA'));
+          delimiter.add('\\rAngle', new Symbol('\\rAngle', '\u27EB'));
+          delimiter.add('\\lbrbrak', new Symbol('\\lbrbrak', '\u2772'));
+          delimiter.add('\\rbrbrak', new Symbol('\\rbrbrak', '\u2773'));
+          delimiter.add('\\lbag', new Symbol('\\lbag', '\u27C5'));
+          delimiter.add('\\rbag', new Symbol('\\rbag', '\u27C6'));
+          delimiter.add('\\llparenthesis', new Symbol('\\llparenthesis', '\u2987'));
+          delimiter.add('\\rrparenthesis', new Symbol('\\rrparenthesis', '\u2988'));
+          delimiter.add('\\llangle', new Symbol('\\llangle', '\u2989'));
+          delimiter.add('\\rrangle', new Symbol('\\rrangle', '\u298A'));
+          delimiter.add('\\Lbrbrak', new Symbol('\\Lbrbrak', '\u27EC'));
+          delimiter.add('\\Rbrbrak', new Symbol('\\Rbrbrak', '\u27ED'));
+          delimiter.add('\\lBrace', new Symbol('\\lBrace', '\u2983'));
+          delimiter.add('\\rBrace', new Symbol('\\rBrace', '\u2984'));
+          delimiter.add('\\lParen', new Symbol('\\lParen', '\u2985'));
+          delimiter.add('\\rParen', new Symbol('\\rParen', '\u2986'));
+          delimiter.add('\\lbrackubar', new Symbol('\\lbrackubar', '\u298B'));
+          delimiter.add('\\rbrackubar', new Symbol('\\rbrackubar', '\u298C'));
+          delimiter.add('\\lbrackultick', new Symbol('\\lbrackultick', '\u298D'));
+          delimiter.add('\\rbracklrtick', new Symbol('\\rbracklrtick', '\u298E'));
+          delimiter.add('\\lbracklltick', new Symbol('\\lbracklltick', '\u298F'));
+          delimiter.add('\\rbrackurtick', new Symbol('\\rbrackurtick', '\u2990'));
+          delimiter.add('\\langledot', new Symbol('\\langledot', '\u2991'));
+          delimiter.add('\\rangledot', new Symbol('\\rangledot', '\u2992'));
+          delimiter.add('\\lparenless', new Symbol('\\lparenless', '\u2993'));
+          delimiter.add('\\rparengtr', new Symbol('\\rparengtr', '\u2994'));
+          delimiter.add('\\Lparengtr', new Symbol('\\Lparengtr', '\u2995'));
+          delimiter.add('\\Rparenless', new Symbol('\\Rparenless', '\u2996'));
+          delimiter.add('\\lblkbrbrak', new Symbol('\\lblkbrbrak', '\u2997'));
+          delimiter.add('\\rblkbrbrak', new Symbol('\\rblkbrbrak', '\u2998'));
+          delimiter.add('\\lvzigzag', new Symbol('\\lvzigzag', '\u29D8'));
+          delimiter.add('\\rvzigzag', new Symbol('\\rvzigzag', '\u29D9'));
+          delimiter.add('\\Lvzigzag', new Symbol('\\Lvzigzag', '\u29DA'));
+          delimiter.add('\\Rvzigzag', new Symbol('\\Rvzigzag', '\u29DB'));
+          delimiter.add('\\lcurvyangle', new Symbol('\\lcurvyangle', '\u29FC'));
+          delimiter.add('\\rcurvyangle', new Symbol('\\rcurvyangle', '\u29FD'));
+          delimiter.add('\\Vvert', new Symbol('\\Vvert', '\u2980'));
+    }     // ready
+  },      // startup
+
+  tex: {
+    packages: {'[+]': ['tagformat', 'Lwarp-macros', 'textmacros']},
+    tags: "ams",
+         tagformat: {
+             number: function (n) {
+                 if(MathJax.config.subequations==0)
+                     return(MathJax.config.section + n);
+                 else
+                     return(MathJax.config.section + String.fromCharCode(96+n));
+             },
+         },
+  }
+}
+</script>
+
+<script
+    id="MathJax-script"
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+></script>
+
+</head>
+<body>
+
+
+<div class="homepagegrid">
+
+
+<main class="bodycontainer">
+
+
+<section class="textbody">
+
+<a id="Backpropagation_calculus-autofile-0"></a>
+
+<!--MathJax customizations:-->
+<div data-nosnippet
+    style="display:none"
+>
+
+\(\newcommand{\footnotename}{footnote}\)
+
+\(\def \LWRfootnote {1}\)
+
+\(\newcommand {\footnote }[2][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\newcommand {\footnotemark }[1][\LWRfootnote ]{{}^{\mathrm {#1}}}\)
+
+\(\let \LWRorighspace \hspace \)
+
+\(\renewcommand {\hspace }{\ifstar \LWRorighspace \LWRorighspace }\)
+
+\(\newcommand {\TextOrMath }[2]{#2}\)
+
+\(\newcommand {\mathnormal }[1]{{#1}}\)
+
+\(\newcommand \ensuremath [1]{#1}\)
+
+\(\newcommand {\LWRframebox }[2][]{\fbox {#2}} \newcommand {\framebox }[1][]{\LWRframebox } \)
+
+\(\newcommand {\setlength }[2]{}\)
+
+\(\newcommand {\addtolength }[2]{}\)
+
+\(\newcommand {\setcounter }[2]{}\)
+
+\(\newcommand {\addtocounter }[2]{}\)
+
+\(\newcommand {\arabic }[1]{}\)
+
+\(\newcommand {\number }[1]{}\)
+
+\(\newcommand {\noalign }[1]{\text {#1}\notag \\}\)
+
+\(\newcommand {\cline }[1]{}\)
+
+\(\newcommand {\directlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\luatexdirectlua }[1]{\text {(directlua)}}\)
+
+\(\newcommand {\protect }{}\)
+
+\(\def \LWRabsorbnumber #1 {}\)
+
+\(\def \LWRabsorbquotenumber &quot;#1 {}\)
+
+\(\newcommand {\LWRabsorboption }[1][]{}\)
+
+\(\newcommand {\LWRabsorbtwooptions }[1][]{\LWRabsorboption }\)
+
+\(\def \mathchar {\ifnextchar &quot;\LWRabsorbquotenumber \LWRabsorbnumber }\)
+
+\(\def \mathcode #1={\mathchar }\)
+
+\(\let \delcode \mathcode \)
+
+\(\let \delimiter \mathchar \)
+
+\(\def \oe {\unicode {x0153}}\)
+
+\(\def \OE {\unicode {x0152}}\)
+
+\(\def \ae {\unicode {x00E6}}\)
+
+\(\def \AE {\unicode {x00C6}}\)
+
+\(\def \aa {\unicode {x00E5}}\)
+
+\(\def \AA {\unicode {x00C5}}\)
+
+\(\def \o {\unicode {x00F8}}\)
+
+\(\def \O {\unicode {x00D8}}\)
+
+\(\def \l {\unicode {x0142}}\)
+
+\(\def \L {\unicode {x0141}}\)
+
+\(\def \ss {\unicode {x00DF}}\)
+
+\(\def \SS {\unicode {x1E9E}}\)
+
+\(\def \dag {\unicode {x2020}}\)
+
+\(\def \ddag {\unicode {x2021}}\)
+
+\(\def \P {\unicode {x00B6}}\)
+
+\(\def \copyright {\unicode {x00A9}}\)
+
+\(\def \pounds {\unicode {x00A3}}\)
+
+\(\let \LWRref \ref \)
+
+\(\renewcommand {\ref }{\ifstar \LWRref \LWRref }\)
+
+\( \newcommand {\multicolumn }[3]{#3}\)
+
+\(\require {textcomp}\)
+
+\(\newcommand {\intertext }[1]{\text {#1}\notag \\}\)
+
+\(\let \Hat \hat \)
+
+\(\let \Check \check \)
+
+\(\let \Tilde \tilde \)
+
+\(\let \Acute \acute \)
+
+\(\let \Grave \grave \)
+
+\(\let \Dot \dot \)
+
+\(\let \Ddot \ddot \)
+
+\(\let \Breve \breve \)
+
+\(\let \Bar \bar \)
+
+\(\let \Vec \vec \)
+
+</div>
+
+<a id="Backpropagation_calculus-autopage-1"></a>
+<!--
+...... section Backpropagation calculus ......
+-->
+<h4 id="autosec-2">Backpropagation calculus</h4>
+<a id="Backpropagation_calculus-autopage-2"></a>
+
+
+<p>
+In the last article, we explained that we can compute the gradient \(\nabla c\) of the cost function by averaging the gradients of the per-training-example cost functions:
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                  1
+                                                                                                                           ∇c =     (∇c1 + ... + ∇cn ) .
+                                                                                                                                  n
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\nabla c = \frac {1}{n}\left (\nabla c_1 + ...         + \nabla c_n\right ).
+\end{align*}
+
+</p>
+
+<p>
+We even went further, as it turns out that thinking about further decomposing the per-training-example gradients, \(\nabla c_1, ..., \nabla c_n\) gives one sense for why any algorithm that computes them must be recursive. Thus, we got an intuitive idea of how
+backpropagation works.
+</p>
+
+<p>
+In this article, we present the standard version of the backpropagation algorithm that is actually run on a computer and used in practice. The difference between the version of backpropagation we present in this article and the more intuitive one we presented in the last is
+that, in the standard version, we <i>don’t</i> further decompose each \(\nabla c_1\), ..., \(\nabla c_n\). Instead of decomposing these gradients, we directly compute them by taking partial derivatives. The recursion naturally emerges if we persist through the
+calculation.
+</p>
+<!--
+...... subsection Notation warning ......
+-->
+<h5 id="autosec-3">Notation warning</h5>
+<a id="Backpropagation_calculus-autopage-3"></a>
+
+
+<p>
+An important heads up! In the last article, we had
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                1
+                                                                                                                         ∇c =     (∇c1 + ... + ∇cn ) ,
+                                                                                                                                n
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\nabla c = \frac {1}{n}\left (\nabla c_1 + ...        + \nabla c_n\right ),
+\end{align*}
+
+</p>
+
+<p>
+and used \(c_k\) to denote an arbitrary one of \(c_1, ..., c_n\). In this article, we will use \(c_i\) for this purpose rather than \(c_k\). This is because we want to reserve the letter \(k\) so that we can use it to denote the weight \(w^{(\ell )}_{kj}\) from the
+\(k\)th neuron in layer \(\ell - 1\) to the \(j\)th neuron in layer \(\ell \).
+</p>
+<!--
+...... subsection Notation overview ......
+-->
+<h5 id="autosec-4">Notation overview</h5>
+<a id="Backpropagation_calculus-autopage-4"></a>
+
+
+<p>
+Overall, our notation will be as follows:
+</p>
+
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> \(c_i\) is the cost function for the \(i\)th training example, defined as
+</p>
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+<!--
+
+                                                                                                                                  nL
+                                                                                                                                  ∑︂             (L) 2
+                                                                                                                          ci :=         (yij − aj     ) ,
+                                                                                                                                  j=1
+
+
+-->
+
+<p>
+
+\begin{align*}
+c_i := \sum _{j = 1}^{n_L} (y_{ij} - a^{(L)}_j)^2,
+\end{align*}
+
+</p>
+<p>
+where \(y_{1j}, ..., y_{n_L j}\) are the expected last-layer activations for the \(i\)th training example
+</p>
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(w^{(\ell )}_{kj}\) is the weight from the \(k\)th neuron in layer \(\ell - 1\) to the \(j\)th neuron in layer \(\ell \)
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(b^{(\ell )}_j\) is the bias of the \(j\)th neuron in the \(\ell \)th layer<sup>1</sup>
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(z^{(\ell )}_j\) is the “preactivation value” of the \(j\)th neuron in layer \(\ell \), and is defined to be the weighted sum of the layer \(\ell - 1\) activations by the weights of \(j\)th neuron in layer \(\ell \), plus the bias of
+layer \(\ell \):
+</p>
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+<!--
+
+                                                                                                                               nℓ−1
+                                                                                                                        (ℓ)
+                                                                                                                               ∑︂         (ℓ) (ℓ−1)         (ℓ)
+                                                                                                                       zj :=            wkj ak        + bj
+                                                                                                                               k=1
+
+-->
+
+<p>
+
+\begin{align*}
+z^{(\ell )}_j := \sum _{k = 1}^{n_{\ell -1}} w^{(\ell )}_{kj} a^{(\ell - 1)}_k + b^{(\ell )}_j
+\end{align*}
+
+</p>
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(a^{(\ell )}_j\) is the activation value of the \(j\)th neuron in layer \(\ell \), and is defined to be the result of the sigmoid function acting on the preactivation \(z^{(\ell )}_j\):
+</p>
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+<!--
+
+                                                                                                                                  (ℓ)         (ℓ)
+                                                                                                                               aj       := σ(zj )
+
+
+-->
+
+<p>
+
+\begin{align*}
+a^{(\ell )}_j := \sigma (z^{(\ell )}_j)
+\end{align*}
+
+</p>
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> \(L\) is the last layer in the neural network
+</p>
+</li>
+</ul>
+<div role="note" class="footnotes">
+
+<a id="Backpropagation_calculus-autopage-5"></a>
+<p>
+<sup>1</sup>&nbsp;In the first article in this series, we said that each layer, not each neuron, will have its own bias. Making the more general assumption that each neuron has its own bias doesn’t make the calculations more difficult, and is more common in the literature,
+so we do it here.
+</p>
+
+
+</div>
+<!--
+...... subsection Partial derivatives in an arbitrary layer ......
+-->
+<h5 id="autosec-6">Partial derivatives in an arbitrary layer</h5>
+<a id="Backpropagation_calculus-autopage-6"></a>
+
+
+<p>
+Now, time to get to work. We need to compute the partial derivatives of \(c_i\) for an arbitrary layer \(\ell \), \(\ell &lt; L\):
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                                                                                 (ℓ)          (ℓ)
+                                                                                                                                                                ∂ci                  ∂ci ∂aj            ∂zj
+                                                                                                                                                                     (ℓ)
+                                                                                                                                                                         =            (ℓ)        (ℓ)          (ℓ)
+                                                                                                                                                                                                                       ,
+                                                                                                                                                               ∂wkj              ∂aj         ∂zj       ∂wkj
+                                                                                                                                                                                                 (ℓ)         (ℓ)
+                                                                                                                                                                 ∂ci                 ∂ci ∂aj           ∂zj
+                                                                                                                                                                     (ℓ)
+                                                                                                                                                                         =            (ℓ)        (ℓ)         (ℓ)
+                                                                                                                                                                                                                    .
+                                                                                                                                                                ∂bj              ∂aj         ∂zj        ∂bj
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial c_i}{\partial w^{(\ell )}_{kj}} &amp;= \frac {\partial c_i}{\partial a^{(\ell )}_j} \frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} \frac {\partial z^{(\ell )}_j}{\partial w^{(\ell )}_{kj}}, \\ \frac {\partial
+c_i}{\partial b^{(\ell )}_j} &amp;= \frac {\partial c_i}{\partial a^{(\ell )}_j} \frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} \frac {\partial z^{(\ell )}_j}{\partial b^{(\ell )}_j}.
+\end{align*}
+
+</p>
+
+<p>
+To determine these partial derivatives, we’ll compute the partial derivatives in the above products. First, we have
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                    nℓ+1
+                                                                                                                                                   (ℓ+1)   (ℓ+1)
+                                                                                                                     ∂ci            ∑︂           ∂ar
+                                                                                                                                                   ∂ci   ∂zr
+                                                                                                                          (ℓ)
+                                                                                                                              =            (ℓ+1)   (ℓ+1)     (ℓ)
+                                                                                                                    ∂aj             r=1
+                                                                                                                                         ∂ar     ∂zr      ∂aj
+                                                                                                                                    nℓ+1
+                                                                                                                                                                                              (︄ n                                                 )︄
+                                                                                                                                                                                                   ℓ
+                                                                                                                                    ∑︂             ∂ci
+                                                                                                                                                   (ℓ+1)   ∂    ′
+                                                                                                                                                                                                ∑︂        (ℓ+1) (ℓ) (ℓ+1)
+                                                                                                                                =        (ℓ+1)
+                                                                                                                                               σ (zr     ) (ℓ)                                           wsr as + br
+                                                                                                                                  r=1
+                                                                                                                                       ∂ar                ∂aj                                     s=1
+                                                                                                                                  nℓ+1                       nℓ
+                                                                                                                                                                            (︄                                                                                )︄
+                                                                                                                                                                                                                                                    (ℓ+1)
+                                                                                                                                                   ∂ci                        ∑︂ ∂                                                                ∂br
+                                                                                                                                    ∑︂                                                                       (︂                         )︂
+                                                                                                                                                                ′     (ℓ+1)                                        (ℓ+1) (ℓ)
+                                                                                                                                =                  (ℓ+1)
+                                                                                                                                                              σ (zr              )                 (ℓ)
+                                                                                                                                                                                                                  wsr as                     +          (ℓ)
+                                                                                                                                    r=1
+                                                                                                                                              ∂ar                                      s=1
+                                                                                                                                                                                                 ∂aj                                               ∂aj
+                                                                                                                                    nℓ+1
+                                                                                                                                                                                     (︄ n                                                    )︄
+                                                                                                                                                                                          ℓ
+                                                                                                                                                   ∂ci                                                             ∂
+                                                                                                                                    ∑︂                                                 ∑︂                                   (︂          )︂
+                                                                                                                                                    (ℓ+1)       ′                                 (ℓ+1)                           (ℓ)
+                                                                                                                                =         (ℓ+1)
+                                                                                                                                                σ (zr     )                                      wsr                (ℓ)
+                                                                                                                                                                                                                                 as
+                                                                                                                                  r=1
+                                                                                                                                       ∂a r                                            s=1
+                                                                                                                                                                                                              ∂aj
+                                                                                                                                  nℓ+1
+                                                                                                                                                                            (︄ n                                    )︄
+                                                                                                                                                                                 ℓ
+                                                                                                                                    ∑︂             ∂ci          ′     (ℓ+1)
+                                                                                                                                                                              ∑︂                  (ℓ+1)
+                                                                                                                                =                  (ℓ+1)
+                                                                                                                                                              σ (zr              )               wsr δsj
+                                                                                                                                    r=1
+                                                                                                                                              ∂ar                                      s=1
+                                                                                                                                    nℓ+1
+                                                                                                                                    ∑︂             ∂ci                (ℓ+1)           (ℓ+1)
+                                                                                                                                =                  (ℓ+1)
+                                                                                                                                                              σ ′ (zr            )wjr
+                                                                                                                                    r=1
+                                                                                                                                        ∂ar
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial c_i}{\partial a^{(\ell )}_j} &amp;= \sum _{r = 1}^{n_{\ell +1}} \frac {\partial c_i}{\partial a^{(\ell +1)}_r} \frac {\partial a^{(\ell +1)}_r}{\partial z^{(\ell + 1)}_r} \frac {\partial z^{(\ell + 1)}_r}{\partial a^{(\ell
+)}_j} \\ &amp;= \sum _{r = 1}^{n_{\ell +1}} \frac {\partial c_i}{\partial a^{(\ell +1)}_r} \sigma &apos;(z^{(\ell + 1)}_r) \frac {\partial }{\partial a^{(\ell )}_j}\left (\sum _{s = 1}^{n_\ell } w^{(\ell + 1)}_{sr} a^{(\ell )}_s +
+b^{(\ell + 1)}_r\right ) \\ &amp;= \sum _{r = 1}^{n_{\ell +1}} \frac {\partial c_i}{\partial a^{(\ell +1)}_r} \sigma &apos;(z^{(\ell + 1)}_r) \left (\sum _{s = 1}^{n_\ell } \frac {\partial }{\partial a^{(\ell )}_j}\left (w^{(\ell +
+1)}_{sr} a^{(\ell )}_s\right ) + \frac {\partial b^{(\ell + 1)}_r}{\partial a^{(\ell )}_j}\right ) \\ &amp;= \sum _{r = 1}^{n_{\ell +1}} \frac {\partial c_i}{\partial a^{(\ell +1)}_r} \sigma &apos;(z^{(\ell + 1)}_r) \left (\sum _{s =
+1}^{n_\ell } w^{(\ell + 1)}_{sr} \frac {\partial }{\partial a^{(\ell )}_j} \left ( a^{(\ell )}_s \right ) \right ) \\ &amp;= \sum _{r = 1}^{n_{\ell +1}} \frac {\partial c_i}{\partial a^{(\ell +1)}_r} \sigma &apos;(z^{(\ell + 1)}_r) \left
+(\sum _{s = 1}^{n_\ell } w^{(\ell + 1)}_{sr} \delta _{sj} \right ) \\ &amp;= \sum _{r = 1}^{n_{\ell +1}} \frac {\partial c_i}{\partial a^{(\ell +1)}_r} \sigma &apos;(z^{(\ell + 1)}_r) w^{(\ell + 1)}_{jr}
+\end{align*}
+
+</p>
+
+<p>
+Notice how recursion has already crept in: overall, the equation we have derived says that in order to know \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\) for layer \(\ell \), we must already know it for layer \(\ell + 1\).
+</p>
+
+<p>
+Second, we have
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                                                    (ℓ)                 (ℓ)
+                                                                                                                                                              ∂aj               ∂σ(zj )                       (ℓ)
+                                                                                                                                                                    (ℓ)
+                                                                                                                                                                        =              (ℓ)
+                                                                                                                                                                                                 = σ ′ (zj ).
+                                                                                                                                                              ∂zj                    ∂zj
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} = \frac {\partial \sigma (z^{(\ell )}_j)}{\partial z^{(\ell )}_j} = \sigma &apos;(z^{(\ell )}_j).
+\end{align*}
+
+</p>
+
+<p>
+Third, we have
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                              (ℓ)
+                                                                                                 (︄nℓ−1                                       )︄
+                                                                           ∂zj             ∂       ∑︂          (ℓ) (ℓ−1)    (ℓ)
+                                                                              (ℓ)
+                                                                                    =      (ℓ)
+                                                                                                              wrj ar     + bj
+                                                                           ∂wkj         ∂wkj           r=1
+                                                                                        (︄nℓ−1                                                      (ℓ)
+                                                                                                                                                          )︄
+                                                                                          ∑︂           ∂
+                                                                                                              (︂
+                                                                                                                    (ℓ) (ℓ−1)
+                                                                                                                                    )︂         ∂bj
+                                                                                    =                   (ℓ)
+                                                                                                                   wrj ar                +          (ℓ)
+                                                                                           r=1
+                                                                                               ∂wkj                                           ∂wkj
+                                                                                        (︄nℓ−1                                           )︄
+                                                                                                       ∂
+                                                                                          ∑︂                  (︂          )︂
+                                                                                                                    (ℓ)         (ℓ−1)
+                                                                                    =                   (ℓ)
+                                                                                                                   wrj         ar
+                                                                                           r=1
+                                                                                               ∂wkj
+                                                                                        (︄nℓ−1                      )︄
+                                                                                          ∑︂              (ℓ−1)
+                                                                                    =                δrk ar              , where \(\delta _{rk} = 1\) when \(r = k\) and \(\delta _{rk} = 0\) when \(r \neq k\)
+                                                                                           r=1
+                                                                                         (ℓ−1)
+                                                                                    = ak         .
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial z^{(\ell )}_j}{\partial w^{(\ell )}_{kj}} &amp;= \frac {\partial }{\partial w^{(\ell )}_{kj}}\left (\sum _{r = 1}^{n_{\ell -1}} w^{(\ell )}_{rj} a^{(\ell -1)}_r + b^{(\ell )}_j\right ) \\ &amp;= \left (\sum _{r =
+1}^{n_{\ell -1}} \frac {\partial }{\partial w^{(\ell )}_{kj}}\left (w^{(\ell )}_{rj} a^{(\ell -1)}_r\right ) + \frac {\partial b^{(\ell )}_j}{\partial w^{(\ell )}_{kj}}\right ) \\ &amp;= \left (\sum _{r = 1}^{n_{\ell -1}} \frac {\partial
+}{\partial w^{(\ell )}_{kj}}\left (w^{(\ell )}_{rj}\right ) a^{(\ell -1)}_r \right ) \\ &amp;= \left (\sum _{r = 1}^{n_{\ell -1}} \delta _{rk} a^{(\ell -1)}_r \right ), \text { where $\delta _{rk} = 1$ when $r = k$ and $\delta _{rk} = 0$
+when $r \neq k$} \\ &amp;= a^{(\ell -1)}_k.
+\end{align*}
+
+</p>
+
+<p>
+Fourth, we have
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                                (ℓ)
+                                                                                                                                                                          (︄nℓ−1                                            )︄
+                                                                                                                                              ∂zj                ∂          ∑︂          (ℓ) (ℓ−1)    (ℓ)
+                                                                                                                                                (ℓ)
+                                                                                                                                                          =         (ℓ)
+                                                                                                                                                                                       wrj ar     + bj                            = 1.
+                                                                                                                                              ∂bj              ∂bj              r=1
+
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial z^{(\ell )}_j}{\partial b^{(\ell )}_j} = \frac {\partial }{\partial b^{(\ell )}_j}\left (\sum _{r = 1}^{n_{\ell -1}} w^{(\ell )}_{rj} a^{(\ell -1)}_r + b^{(\ell )}_j\right ) = 1.
+\end{align*}
+
+</p>
+
+<p>
+So the partial derivatives for layer \(\ell \) are
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                                                           (ℓ)         (ℓ)
+                                                                                                                                          ∂ci                 ∂ci ∂aj            ∂zj                ∂ci                    (ℓ)     (ℓ−1)
+                                                                                                                                              (ℓ)
+                                                                                                                                                  =            (ℓ)        (ℓ)          (ℓ)
+                                                                                                                                                                                              =         (ℓ)
+                                                                                                                                                                                                              σ ′ (zj )ak                     ,
+                                                                                                                                         ∂wkj             ∂aj         ∂zj        ∂wkj              ∂aj
+                                                                                                                                                                          (ℓ)         (ℓ)
+                                                                                                                                         ∂ci              ∂ci ∂aj                ∂zj               ∂ci                  (ℓ)
+                                                                                                                                             (ℓ)
+                                                                                                                                                 =             (ℓ)        (ℓ)         (ℓ)
+                                                                                                                                                                                             =         (ℓ)
+                                                                                                                                                                                                             σ ′ (zj ),
+                                                                                                                                         ∂bj              ∂aj        ∂zj         ∂bj             ∂aj
+                                                                                                                                                                      nℓ+1
+                                                                                                                                                                                      (ℓ+1)
+                                                                                                                                                      ∂ci             ∑︂           ∂ar∂ci     (ℓ+1)
+                                                                                                                                     where                (ℓ)
+                                                                                                                                                              =              (ℓ+1)
+                                                                                                                                                                                            w
+                                                                                                                                                                                      (ℓ+1) jr
+                                                                                                                                                                                                    .
+                                                                                                                                                     ∂aj              r=1
+                                                                                                                                                                          ∂a r     ∂z r
+
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+&amp;\frac {\partial c_i}{\partial w^{(\ell )}_{kj}} = \frac {\partial c_i}{\partial a^{(\ell )}_j} \frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} \frac {\partial z^{(\ell )}_j}{\partial w^{(\ell )}_{kj}} = \frac {\partial
+c_i}{\partial a^{(\ell )}_j} \sigma &apos;(z^{(\ell )}_j) a^{(\ell - 1)}_k, \\ &amp;\frac {\partial c_i}{\partial b^{(\ell )}_j} = \frac {\partial c_i}{\partial a^{(\ell )}_j} \frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} \frac
+{\partial z^{(\ell )}_j}{\partial b^{(\ell )}_j} = \frac {\partial c_i}{\partial a^{(\ell )}_j} \sigma &apos;(z^{(\ell )}_j), \\ &amp;\text {where } \frac {\partial c_i}{\partial a^{(\ell )}_j} = \sum _{r = 1}^{n_{\ell +1}} \frac
+{\partial c_i}{\partial a^{(\ell + 1)}_r} \frac {\partial a^{(\ell + 1)}_r}{\partial z^{(\ell + 1)}_r} w^{(\ell + 1)}_{jr}.
+\end{align*}
+
+</p>
+
+<p>
+Again, notice recursion in the expression for \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\). In order to compute \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\), we must already know it for layer \(\ell + 1\).
+</p>
+<!--
+...... subsection Partial derivatives in the last layer ......
+-->
+<h5 id="autosec-7">Partial derivatives in the last layer</h5>
+<a id="Backpropagation_calculus-autopage-7"></a>
+
+
+<p>
+If we are to know determine \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\) for all layers \(\ell \), we need to know it for the last layer, i.e. when \(\ell = L\). If we know it for the last layer, then we know it for the prior to last layer. If we know it for the prior
+to last layer, we know it for the layer before that. And so on.
+</p>
+
+<p>
+Additionally, notice that the expressions for the partial derivatives of \(c_i\) we derived above are only applicable for layers \(\ell &lt; L\), since we assumed the existence of a layer \(\ell + 1\) when computing them. Thus, we need to compute \(\frac {\partial
+c_i}{\partial a^{(L)}_j}\) <i>and</i> the partial derivatives of \(c_i\) for layer \(L\). We will start with the later; it turns out that in the course of doing so we will end up doing the former.
+</p>
+
+<p>
+We compute the partial derivatives for layer \(L\) now. We have
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                                                   (L)      (L)
+                                                                                                                                          ∂ci          ∂ci ∂aj           ∂zj
+                                                                                                                                           (L)
+                                                                                                                                               =           (L)     (L)      (L)
+                                                                                                                                                                                  ,
+                                                                                                                                         ∂wkj        ∂aj         ∂zj     ∂wkj
+                                                                                                                                                           (L)   (L)
+                                                                                                                                          ∂ci          ∂ci ∂aj ∂zj
+                                                                                                                                           (L)
+                                                                                                                                                 =     (L) (L)   (L)
+                                                                                                                                                                     .
+                                                                                                                                         ∂bj         ∂aj ∂zj ∂bj
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial c_i}{\partial w^{(L)}_{kj}} &amp;= \frac {\partial c_i}{\partial a^{(L)}_j} \frac {\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac {\partial z^{(L)}_j}{\partial w^{(L)}_{kj}}, \\ \frac {\partial c_i}{\partial b^{(L)}_j}
+&amp;= \frac {\partial c_i}{\partial a^{(L)}_j} \frac {\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac {\partial z^{(L)}_j}{\partial b^{(L)}_j}.
+\end{align*}
+
+</p>
+
+<p>
+Just as before, we compute the partial derivatives appearing in the products. First, we have
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                           nL
+                                                                         ∂ci        ∂      ∑︂           (L)
+                                                                           (L)
+                                                                               =     (L)
+                                                                                                (yir − ar )2
+                                                                        ∂aj        ∂aj r=1
+                                                                                   nL
+                                                                                                         ∂
+                                                                                   ∑︂                           (︂                )︂
+                                                                                                  (L)                       (L)
+                                                                               =         2(yir − ar )     (L)
+                                                                                                                     yir − ar
+                                                                                   r=1
+                                                                                                        ∂aj
+                                                                                   nL
+                                                                                   ∑︂             (L)
+                                                                               =         2(yir − ar )(−δrj ), where \(\delta _{rj} = 1\) when \(r = j\) and \(\delta _{rj} = 0\) when \(r \neq j\)
+                                                                                   r=1
+                                                                                     (L)
+                                                                               = 2(aj      − yij ).
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial c_i}{\partial a^{(L)}_j} &amp;= \frac {\partial }{\partial a^{(L)}_j} \sum _{r = 1}^{n_L} (y_{ir} - a^{(L)}_r)^2 \\ &amp;= \sum _{r = 1}^{n_L} 2(y_{ir} - a^{(L)}_r)\frac {\partial }{\partial a^{(L)}_j}\left (y_{ir} -
+a^{(L)}_r\right ) \\ &amp;= \sum _{r = 1}^{n_L} 2(y_{ir} - a^{(L)}_r)(-\delta _{rj})\text {, where $\delta _{rj} = 1$ when $r = j$ and $\delta _{rj} = 0$ when $r \neq j$} \\ &amp;= 2(a^{(L)}_j - y_{ij}).
+\end{align*}
+
+</p>
+
+<p>
+We determined the remaining partial derivatives previously in our computations for an arbitrary layer \(\ell \). Thus the partial derivatives for layer \(L\) are
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                      (L)   (L)
+                                                                                                                     ∂ci          ∂ci ∂aj ∂zj        (L)            (L) (L−1)
+                                                                                                                  (L)
+                                                                                                                           =      (L) (L)   (L)
+                                                                                                                                                = 2(aj − yij )σ ′ (zj )ak     ,
+                                                                                                                ∂wkj            ∂aj ∂zj ∂wkj
+                                                                                                                                           (L)       (L)
+                                                                                                                     ∂ci          ∂ci ∂aj        ∂zj               (L)                (L)
+                                                                                                                       (L)
+                                                                                                                           =       (L)     (L)       (L)
+                                                                                                                                                            = 2(aj       − yij )σ ′ (zj     ).
+                                                                                                                 ∂bj            ∂aj      ∂zj     ∂bj
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial c_i}{\partial w^{(L)}_{kj}} &amp;= \frac {\partial c_i}{\partial a^{(L)}_j} \frac {\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac {\partial z^{(L)}_j}{\partial w^{(L)}_{kj}} = 2(a^{(L)}_j - y_{ij}) \sigma &apos;(z^{(L)}_j)
+a^{(L - 1)}_k, \\ \frac {\partial c_i}{\partial b^{(L)}_j} &amp;= \frac {\partial c_i}{\partial a^{(L)}_j} \frac {\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac {\partial z^{(L)}_j}{\partial b^{(L)}_j} = 2(a^{(L)}_j - y_{ij}) \sigma
+&apos;(z^{(L)}_j).
+\end{align*}
+
+</p>
+<!--
+...... subsection The ‘‘raw’’ backpropagation equations ......
+-->
+<h5 id="autosec-8">The “raw” backpropagation equations</h5>
+<a id="Backpropagation_calculus-autopage-8"></a>
+
+
+<p>
+We now summarize the equations we’ve derived for the partial derivatives in layer \(L\) and layer \(\ell \), \(\ell &lt; L\):
+</p>
+
+<p>
+<span class="underline">Layer \(L\)</span>
+</p>
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                   (L)         (L)
+                                                                                                            ∂ci           ∂ci ∂aj        ∂zj                     (L)                   (L)        (L−1)
+                                                                                                             (L)
+                                                                                                                 =         (L)     (L)         (L)
+                                                                                                                                                       = 2(aj          − yij )σ ′ (zj        )ak          ,
+                                                                                                          ∂wkj           ∂aj     ∂zj     ∂wkj
+                                                                                                                                   (L)         (L)
+                                                                                                            ∂ci           ∂ci ∂aj        ∂zj                    (L)                    (L)
+                                                                                                             (L)
+                                                                                                                 =         (L)     (L)         (L)
+                                                                                                                                                      = 2(aj           − yij )σ ′ (zj        ).
+                                                                                                           ∂bj           ∂aj     ∂zj     ∂bj
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\frac {\partial c_i}{\partial w^{(L)}_{kj}} &amp;= \frac {\partial c_i}{\partial a^{(L)}_j} \frac {\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac {\partial z^{(L)}_j}{\partial w^{(L)}_{kj}} = 2(a^{(L)}_j - y_{ij}) \sigma &apos;(z^{(L)}_j)
+a^{(L - 1)}_k, \\ \frac {\partial c_i}{\partial b^{(L)}_j} &amp;= \frac {\partial c_i}{\partial a^{(L)}_j} \frac {\partial a^{(L)}_j}{\partial z^{(L)}_j} \frac {\partial z^{(L)}_j}{\partial b^{(L)}_j} = 2(a^{(L)}_j - y_{ij}) \sigma
+&apos;(z^{(L)}_j).
+\end{align*}
+
+</p>
+
+<p>
+<span class="underline">Layer \(\ell \), \(\ell &lt; L\)</span>
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                         (ℓ)          (ℓ)
+                                                                                                                   ∂ci           ∂ci ∂aj        ∂zj               ∂ci           (ℓ)        (ℓ−1)
+                                                                                                                    (ℓ)
+                                                                                                                        =        (ℓ) (ℓ) (ℓ)
+                                                                                                                                                            =         (ℓ)
+                                                                                                                                                                            σ ′ (zj )ak            ,
+                                                                                                                  ∂wkj         ∂aj ∂zj ∂wkj                      ∂aj
+                                                                                                                                         (ℓ)         (ℓ)
+                                                                                                                  ∂ci          ∂ci ∂aj         ∂zj               ∂ci           (ℓ)
+                                                                                                                    (ℓ)
+                                                                                                                        =        (ℓ)   (ℓ) (ℓ)
+                                                                                                                                                            =     (ℓ)
+                                                                                                                                                                        σ ′ (zj ),
+                                                                                                                  ∂bj          ∂aj ∂zj ∂bj                      ∂aj
+                                                                                                                                     nℓ+1
+                                                                                                                                                                  (ℓ+1)
+                                                                                                                           ∂ci         ∑︂            ∂ci        ∂ar            (ℓ+1)
+                                                                                                                  where        (ℓ)
+                                                                                                                                   =                 (ℓ+1)        (ℓ+1)
+                                                                                                                                                                             wjr       .
+                                                                                                                          ∂aj          r=1
+                                                                                                                                           ∂ar                  ∂zr
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+&amp;\frac {\partial c_i}{\partial w^{(\ell )}_{kj}} = \frac {\partial c_i}{\partial a^{(\ell )}_j} \frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} \frac {\partial z^{(\ell )}_j}{\partial w^{(\ell )}_{kj}} = \frac {\partial
+c_i}{\partial a^{(\ell )}_j} \sigma &apos;(z^{(\ell )}_j) a^{(\ell - 1)}_k, \\ &amp;\frac {\partial c_i}{\partial b^{(\ell )}_j} = \frac {\partial c_i}{\partial a^{(\ell )}_j} \frac {\partial a^{(\ell )}_j}{\partial z^{(\ell )}_j} \frac
+{\partial z^{(\ell )}_j}{\partial b^{(\ell )}_j} = \frac {\partial c_i}{\partial a^{(\ell )}_j} \sigma &apos;(z^{(\ell )}_j), \\ &amp;\text {where } \frac {\partial c_i}{\partial a^{(\ell )}_j} = \sum _{r = 1}^{n_{\ell +1}} \frac
+{\partial c_i}{\partial a^{(\ell + 1)}_r} \frac {\partial a^{(\ell + 1)}_r}{\partial z^{(\ell + 1)}_r} w^{(\ell + 1)}_{jr}.
+\end{align*}
+
+</p>
+
+<p>
+These equations determine all partial derivatives of \(c_i\) with respect to arbitrary weights and arbitrary biases; they determine the the gradient \(\nabla c_i\).
+</p>
+
+<p>
+Of course, as has already been noted, the expression for \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\) is recursive. In order to know its value for some neuron in layer \(\ell \), we must already know it for all neurons in layer \(\ell + 1\). This is fine, of course,
+since we know how to compute its value in the last layer, layer \(L\). Knowledge of this partial derivative in layer \(L\) layer can thus be “propagated back” from layer \(L\) to layer \(L - 1\), and from layer \(L - 1\) to layer \(L - 2\), and from layer \(L - 2\) to layer
+\(L - 3\), until finally it is known for all layers.
+</p>
+
+<p>
+The recursion used to compute \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\), which is relatively simple as far as recursion goes, is called the <i>backpropagation algorithm</i>. The above equations are called the <i>backpropagation equations</i>.
+</p>
+<!--
+...... subsection A nicer presentation of the backpropagation equations ......
+-->
+<h5 id="autosec-9">A nicer presentation of the backpropagation equations</h5>
+<a id="Backpropagation_calculus-autopage-9"></a>
+
+
+<p>
+The backpropagation equations we’ve derived are practical in that they allow us to compute the gradient \(\nabla c_i\), but their presentation can still be much improved by encapsulating the expressions that look very different across different layers into a single variable.
+</p>
+
+<p>
+The variable that achieves what we want is
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                                                       (︄nℓ+1
+                                                                                                                  ′ (ℓ)
+                                                                                                          {︄ ∂c                                                                         )︄
+                                                                                                             (ℓ) σ (zj )
+                                                                                                              i
+                                                                                                                                     ℓ<L                 ∂ci             ∑︂ (ℓ+1) (ℓ+1)
+                                                                                                   (ℓ)
+                                                                                                  δj :=    ∂aj
+                                                                                                                                             , where         (ℓ)
+                                                                                                                                                                   =           δr   wjr
+                                                                                                              (L)            (L)
+                                                                                                           2(aj − yij )σ ′ (zj )     ℓ=L               ∂aj               r=1
+
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+\delta ^{(\ell )}_j := \begin{cases} \frac {\partial c_i}{\partial a^{(\ell )}_j} \sigma &apos;(z^{(\ell )}_j) &amp; \ell &lt; L \\ 2(a^{(L)}_j - y_{ij}) \sigma &apos;(z^{(L)}_j) &amp; \ell = L \end {cases}, \text { where } \frac
+{\partial c_i}{\partial a^{(\ell )}_j} = \left ( \sum _{r = 1}^{n_{\ell +1}} \delta ^{(\ell + 1)}_r w^{(\ell + 1)}_{jr} \right )
+\end{align*}
+
+</p>
+
+<p>
+With this definition, the backpropagation equations become
+</p>
+
+<span class="hidden"> \(\seteqnumber{0}{}{0}\)</span>
+
+
+<!--
+
+
+                                                                                                                                   ∂ci       (ℓ) (ℓ−1)
+                                                                                                                                    (ℓ)
+                                                                                                                                          = δj ak        ,
+                                                                                                                               ∂wkj
+                                                                                                                                ∂ci          (ℓ)
+                                                                                                                                    (ℓ)
+                                                                                                                                          = δj .
+                                                                                                                               ∂bj
+
+
+-->
+
+
+<p>
+
+\begin{align*}
+&amp;\frac {\partial c_i}{\partial w^{(\ell )}_{kj}} = \delta ^{(\ell )}_j a^{(\ell - 1)}_k, \\ &amp;\frac {\partial c_i}{\partial b^{(\ell )}_j} = \delta ^{(\ell )}_j.
+\end{align*}
+
+</p>
+
+<p>
+Looking back through the derivation at the second equation for layer \(\ell \), we can notice that \(\frac {\partial c_i}{\partial a^{(\ell )}_j} \sigma &apos;(z^{(\ell )}_j) = \frac {\partial c_i}{\partial z^{(\ell )}_j}\). Thus, one nice way of
+expressing \(\delta ^{(\ell )}_j\) is as \(\delta ^{(\ell )}_j = \frac {\partial c_i}{\partial z^{(\ell )}_j}\).
+</p>
+<!--
+...... subsection Interpretation of ......
+-->
+<h5 id="autosec-10">Interpretation of \(\delta ^{(\ell )}_j\)</h5>
+<a id="Backpropagation_calculus-autopage-10"></a>
+
+
+<p>
+In the literature, the variable \(\delta ^{(\ell )}_j := \frac {\partial c_i}{\partial z^{(\ell )}_j}\) is referred to as the “error”.
+</p>
+
+<p>
+The best possible justification for this terminology is that since \(|\frac {\partial c_i}{\partial z^{(\ell )}_j}|\) is large whenever the cost is very sensitive to changes in “preactivation value” \(z^{(\ell )}_j\), and since whenever the cost is sensitive in this way,
+it can be decreased by nudging \(z^{(\ell )}_j\), then there must be a lot of error in the preactivation value \(z^{(\ell )}_j\) when \(|\frac {\partial c_i}{\partial z^{(\ell )}_j}|\) is large. This is very much a heuristic, though. Really, there’s not much good
+reason other than algebraic convenience for referring to \(\frac {\partial c_i}{\partial z^{(\ell )}_j}\) as “error”. And there are several reasons why it should <i>not</i> be referred to as “error”. Most glaringly, partial derivatives such as \(\frac {\partial
+c_i}{\partial z^{(\ell )}_j}\) are <i>rates</i>, and can never rightly be implied to be increment of absolute change, which is exactly what an error is. Also, what’s special about the partial derivative with respect to \(z^{(\ell )}_j\)? Why can’t the partial
+derivative with respect to \(a^{(\ell )}_j\), \(\frac {\partial c_i}{\partial a^{(\ell )}_j}\), be called “error”? If anything should be called “error”, it’s the cost function \(c\) or the per-example cost function \(c_i\), as those do in fact measure actual error.
+</p>
+<!--
+...... subsection Revisiting intuition ......
+-->
+<h5 id="autosec-11">Revisiting intuition</h5>
+<a id="Backpropagation_calculus-autopage-11"></a>
+
+
+<p>
+Let’s revisit some intuition from the last video, “Backpropagation, intuitively”. In the previous article on that video, we claimed that the steepest descent in the cost \(c_{ij}\) (the cost for the \(i\)th training example in the \(j\)th last layer activation) is achieved by
+following these rules:
+</p>
+
+<ul class="itemize" style="list-style-type:none">
+
+<li>
+<p>
+<span class="listmarker">•</span> Weights should be changed a lot relative to the other weights only if the activations they multiply are influential.
+</p>
+
+</li>
+<li>
+
+<p>
+<span class="listmarker">•</span> Prior to last layer activations should be changed a lot relative to the other prior to last layer activations only if the weights they multiply are influential.
+</p>
+</li>
+</ul>
+
+<p>
+It is in fact the backpropagation equations that formalize exactly what is meant by this! If you compare the first two backpropagation equations to the above items, you will see they conform to the above rules.
+</p>
+
+<a id="Backpropagation_calculus-autofile-last"></a>
+</section>
+
+</main>
+
+</div><!-- grid -->
+</body>
+</html>
