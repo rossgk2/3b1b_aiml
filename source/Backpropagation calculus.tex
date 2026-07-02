@@ -15,11 +15,25 @@
 \begin{document}
 	\section*{Backpropagation calculus}
 	
-	In this article, we present how backpropagation is actually done in practice. With the goal of determining the gradient $\nabla c_i$, we'll compute the partial derivatives of $c_i$ with respect to an arbitrary weight and an arbitrary bias in an arbitrary layer (layer $\ell$), and find that they recursively depend on the same partial derivatives for layer $\ell + 1$. Then we'll determine concrete non-recursive expressions for these partial derivatives in layer $L$. The \textit{backpropagation equations} we obtain recursively determine the partial derivatives for all layers, and therefore determine the gradient $\nabla c_i$.
+	In the last article, we explained that  we can compute the gradient $\nabla c$ of the cost function by averaging the gradients of the per-training-example cost functions: 
+
+	\begin{align*}
+		\nabla c = \frac{1}{n}\left(\nabla c_1 + ... + \nabla c_n\right).
+	\end{align*}
+
+	We even went further, as it turns out that thinking about further decomposing the per-training-example gradients, $\nabla c_1, ..., \nabla c_n$ gives one sense for why any algorithm that computes them must be recursive. Thus, we got an intuitive idea of how backpropagation works.
+
+	In this article, we present the standard version of the backpropagation algorithm that is actually run on a computer and used in practice. The difference between the version of backpropagation we present in this article and the more intuitive one we presented in the last is that, in the standard version, we \textit{don't} further decompose each $\nabla c_1$, ..., $\nabla c_n$. Instead of decomposing these gradients, we directly compute them by taking partial derivatives. The recursion naturally emerges if we persist through the calculation.
 	
 	\subsection*{Notation warning}
 	
-	An important heads up! We will actually use $c_i$ to speak of the cost function for the $i$th training example, rather than $c_k$ to speak of the cost function for the $k$th training example. This is because we want to reserve the letter $k$ so that we can use it to denote the weight $w^{(\ell)}_{kj}$ from the $k$th neuron in layer $\ell - 1$ to the $j$th neuron in layer $\ell$.
+	An important heads up! In the last article, we had 
+
+	\begin{align*}
+		\nabla c = \frac{1}{n}\left(\nabla c_1 + ... + \nabla c_n\right),
+	\end{align*}
+
+	and used $c_k$ to denote an arbitrary one of $c_1, ..., c_n$. In this article, we will use $c_i$ for this purpose rather than $c_k$. This is because we want to reserve the letter $k$ so that we can use it to denote the weight $w^{(\ell)}_{kj}$ from the $k$th neuron in layer $\ell - 1$ to the $j$th neuron in layer $\ell$.
 	
 	\subsection*{Notation overview}
 	
@@ -53,7 +67,7 @@
 	
 	\subsection*{Partial derivatives in an arbitrary layer}
 	
-	Now, we compute the relevant partial derivatives of $c_i$ for an arbitrary layer $\ell$, $\ell < L$:
+	Now, time to get to work. We need to compute the partial derivatives of $c_i$ for an arbitrary layer $\ell$, $\ell < L$:
 	
 	\begin{align*}
 		\frac{\partial c_i}{\partial w^{(\ell)}_{kj}} &= \frac{\partial c_i}{\partial a^{(\ell)}_j} \frac{\partial a^{(\ell)}_j}{\partial z^{(\ell)}_j} \frac{\partial z^{(\ell)}_j}{\partial w^{(\ell)}_{kj}}, \\
