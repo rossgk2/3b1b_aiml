@@ -1,0 +1,80 @@
+@import url("lwarp.css") ;
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    background: #ffffff ;
+    color: rgba(0, 0, 0, 0.87) ;
+    font-size: 14px ;
+    line-height: 1.6 ;
+}
+
+p {
+    margin: 1em 0 ;
+}
+
+A:link { color: #0d47a1 ; }
+A:visited { color: #0d47a1 ; }
+A:hover { color: #0d47a1 ; text-decoration: underline ; }
+A:active { color: #0d47a1 ; }
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Helvetica, Arial, sans-serif ;
+    font-weight: 500 ;
+    line-height: 1 ;
+    margin-top: 1.2em ;
+    margin-bottom: 0.8em ;
+}
+
+h1 { font-size: 29px ; }
+h2 { font-size: 24px ; }
+h3 { font-size: 20px ; }
+h4 { font-size: 24px ; }
+h5 { font-size: 20px ; }
+h6 { font-size: 18px ; }
+
+ul, ol {
+    padding-left: 2em ;
+    margin-bottom: 1em ;
+}
+
+blockquote, div.quote {
+    margin: 1em 2em ;
+    padding: 0.5em 1em ;
+    border-left: 3px solid #ccc ;
+}
+
+blockquote p {
+    font-size: inherit ;
+}
+
+span.texttt, kbd, p span.texttt {
+    font-family: Menlo, Consolas, 'DejaVu Sans Mono', monospace ;
+}
+
+span.textrm, div.textrm, span.textnormal, div.textnormal {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Helvetica, Arial, sans-serif ;
+}
+
+div.sidetoccontainer {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Helvetica, Arial, sans-serif ;
+    background: #fafafa ;
+    border-right: 1px solid #e0e0e0 ;
+    border-bottom: 1px solid #e0e0e0 ;
+}
+
+header {
+    border-bottom: 1px solid #e0e0e0 ;
+}
+
+footer {
+    border-top: 1px solid #e0e0e0 ;
+}
+
+nav.topnavigation, nav.botnavigation {
+    border-color: #e0e0e0 ;
+}
